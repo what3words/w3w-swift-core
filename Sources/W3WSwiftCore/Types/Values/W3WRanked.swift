@@ -7,5 +7,5 @@
 
 
 public protocol W3WRanked {
-  var rank: Int? { get set }
+  var rank: Int? { get }
 }

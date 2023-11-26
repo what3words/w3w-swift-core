@@ -17,8 +17,8 @@ public protocol W3WBox {
 
 /// Helper object representing a W3W bounding box
 public struct W3WBaseBox: W3WBox {
-  public var southWest: CLLocationCoordinate2D
-  public var northEast: CLLocationCoordinate2D
+  public let southWest: CLLocationCoordinate2D
+  public let northEast: CLLocationCoordinate2D
   
   public init(southWest: CLLocationCoordinate2D, northEast: CLLocationCoordinate2D) {
     self.southWest = southWest

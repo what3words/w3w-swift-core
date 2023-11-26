@@ -51,19 +51,19 @@ extension W3WSuggestion {
 public struct W3WBaseSuggestion: W3WSuggestion {
 
   /// three word address
-  public var words: String?
+  public let words: String?
   
   /// contains ISO 3166-1 alpha-2 country codes, such as US,CA
-  public var country: W3WCountry?
+  public let country: W3WCountry?
   
   /// nearest place
-  public var nearestPlace: String?
+  public let nearestPlace: String?
   
   /// distance from focus
-  public var distanceToFocus: W3WDistance?
+  public let distanceToFocus: W3WDistance?
   
   /// the language to use
-  public var language: W3WLanguage?
+  public let language: W3WLanguage?
   
   
   public init(words: String? = nil, country: W3WCountry? = nil, nearestPlace: String? = nil, distanceToFocus: W3WDistance? = nil, language: W3WLanguage? = nil) {

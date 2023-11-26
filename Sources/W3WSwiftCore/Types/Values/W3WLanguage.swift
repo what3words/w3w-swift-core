@@ -46,16 +46,16 @@ extension W3WLanguage {
 public struct W3WBaseLanguage: W3WLanguage {
   
   /// name of the language
-  public var name: String? = ""
+  public let name: String?
   
   /// name of the language in that language
-  public var nativeName: String? = ""
+  public let nativeName: String?
   
   /// ISO 639-1 2 letter code
-  public var code: String = ""
+  public let code: String
   
   /// 5 letter code for the locale
-  public var locale:String = ""
+  public let locale:String
 
   
   /// Language struct
@@ -97,11 +97,11 @@ public struct W3WBaseLanguage: W3WLanguage {
   
 
   public init(locale: String) {
-    //self.nativeName = self.code
-    //self.name       = self.code
-    self.code   = Self.getLanguageCode(from: locale)
-
     let region = Self.getLanguageRegion(from: locale)
+
+    self.nativeName = nil
+    self.name       = nil
+    self.code       = Self.getLanguageCode(from: locale)
     self.locale = Self.getLanguageCode(from: locale) + (region.count > 0 ? "_" + region : "")
   }
 

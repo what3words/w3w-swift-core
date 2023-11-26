@@ -41,17 +41,18 @@ public enum W3WSampleDataBuffer {
   
   public func numberOfSamples() -> UInt {
     switch self {
-    case .pcm_s16le(let sample):
-      return UInt(sample.count)
-    case .pcm_f32le(let sample):
-      return UInt(sample.count)
+      case .pcm_s16le(let sample):
+        return UInt(sample.count)
+      case .pcm_f32le(let sample):
+        return UInt(sample.count)
     }
   }
   
 }
 
 
-open class W3WAudioStream {
+
+open class W3WAudioStream: W3WAudioStreamProtocol {
 
   /// the sample rate
   public var sampleRate: Int = 44100

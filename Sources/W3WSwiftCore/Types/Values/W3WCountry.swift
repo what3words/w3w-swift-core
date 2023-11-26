@@ -23,7 +23,7 @@ public protocol W3WCountry {
 public struct W3WBaseCountry: W3WCountry, ExpressibleByStringLiteral {
   
   /// ISO 3166-1 alpha-2 country codes, such as US,CA
-  public var code: String
+  public let code: String
   
   /// Makes a W3Wcountry
   /// - Parameter code: ISO 3166-1 alpha-2 country codes, such as US,CA

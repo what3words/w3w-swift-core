@@ -62,25 +62,25 @@ public struct W3WBaseSquare: W3WSquare {
   public typealias W3WBaseLanguage = W3WLanguage
 
   /// three word address
-  public var words: String?
+  public let words: String?
   
   /// ISO 3166-1 alpha-2 country codes, such as US,CA
-  public var country: W3WBaseCountry?
+  public let country: W3WBaseCountry?
   
   /// nearest place
-  public var nearestPlace: String?
+  public let nearestPlace: String?
   
   /// distance from focus in kilometers
-  public var distanceToFocus: W3WBaseDistance?
+  public let distanceToFocus: W3WBaseDistance?
   
   /// the language to use
-  public var language: W3WBaseLanguage?
+  public let language: W3WBaseLanguage?
   
   /// coordinates of the square
-  public var coordinates: CLLocationCoordinate2D?
+  public let coordinates: CLLocationCoordinate2D?
   
   /// the square's bounds
-  public var bounds: W3WBaseBox?
+  public let bounds: W3WBaseBox?
   
   
   public init(words: String? = nil, country: W3WBaseCountry? = nil, nearestPlace: String? = nil, distanceToFocus: W3WBaseDistance? = nil, language: W3WBaseLanguage? = nil, coordinates: CLLocationCoordinate2D? = nil, bounds: W3WBaseBox? = nil) {

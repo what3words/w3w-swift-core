@@ -17,8 +17,8 @@ public protocol W3WLine: CustomStringConvertible {
 
 /// Helper object representing a W3W grid line
 public struct W3WBaseLine: W3WLine {
-  public var start:CLLocationCoordinate2D
-  public var end:CLLocationCoordinate2D
+  public let start:CLLocationCoordinate2D
+  public let end:CLLocationCoordinate2D
   
   public init(start: CLLocationCoordinate2D, end: CLLocationCoordinate2D) {
     self.start = start
