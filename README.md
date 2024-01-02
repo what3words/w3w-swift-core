@@ -1,9 +1,9 @@
-# <img valign='top' src="https://what3words.com/assets/images/w3w_square_red.png" width="64" height="64" alt="what3words">&nbsp;w3w-swift-types
+# <img valign='top' src="https://what3words.com/assets/images/w3w_square_red.png" width="64" height="64" alt="what3words">&nbsp;w3w-swift-core
 
 Overview
 --------
 
-This library contains the core types used by many of the what3words Swift libraries.
+This library contains the core types used by many of the what3words Swift libraries, as well as some utility classes for things like networking, audio and localisation.
 
 ## Notable Types
 

@@ -10,12 +10,6 @@ import Foundation
 
 public protocol W3WLanguage {
   
-  /// name of the language
-  //var name: String? { get }
-  
-  /// name of the language in that language
-  //var nativeName: String? { get }
-
   /// ISO 639-1 2 letter code
   var code:String { get }
   
