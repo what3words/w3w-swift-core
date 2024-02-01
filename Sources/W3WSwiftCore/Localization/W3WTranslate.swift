@@ -10,14 +10,16 @@ import Foundation
 
 public class W3WTranslations {
   
-  public static let main = W3WTranslations(bundle: .main)
+  public static let main = W3WTranslations()
   
   
   static var bundles = [Bundle]()
   
   
-  public init(bundle: Bundle) {
-    add(bundle: bundle)
+  public init(bundle: Bundle? = nil) {
+    if let b = bundle {
+      add(bundle: b)
+    }
   }
   
   
