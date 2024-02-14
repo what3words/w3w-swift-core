@@ -25,7 +25,7 @@ public class W3WTranslations {
   
   public func add(bundle: Bundle) {
     if !Self.bundles.contains(where: { b in b == bundle }) {
-      Self.bundles.append(bundle)
+      Self.bundles.insert(bundle, at: 0) // Self.bundles.append(bundle)
       do {
         try bundle.loadAndReturnError()
       } catch {
