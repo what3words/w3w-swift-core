@@ -151,9 +151,9 @@ extension What3Words: W3WProtocolV4 {
     case .focus(let f):
       return .focus(f)
     case .language(let l):
-      return .language(try .init(l.locale))
+      return  .language(try l.locale.count == 0 ? .init(l.code) : .init(l.locale))
     case .voiceLanguage(let l):
-      return  .language(try .init(l.locale))
+      return  .language(try l.locale.count == 0 ? .init(l.code) : .init(l.locale))
     case .numberOfResults(let n):
       return .numberOfResults(n)
     case .numberFocusResults(let n):
