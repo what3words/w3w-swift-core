@@ -61,7 +61,7 @@ public struct W3WBaseLanguage: W3WLanguage {
     self.name       = name
     self.nativeName = nativeName
     self.code       = String(code.prefix(2))
-    self.locale     = code.count == 5 ? code : ""
+    self.locale     = String(code.prefix(2))
   }
   
   
