@@ -78,18 +78,6 @@ public struct W3WBaseLanguage: W3WLanguage {
   }
   
   
-  /// Language struct
-  /// - Parameters:
-  ///   - locale: iOS' Locale.Language.Components struct
-  @available(iOS 16.0, macOS 13.0, macCatalyst 16.0, tvOS 16.0, watchOS 9.0, *)
-  init(locale l: Locale.Language.Components) {
-    self.code       = l.languageCode?.identifier ?? ""
-    self.name       = l.languageCode?.identifier ?? ""
-    self.nativeName = l.languageCode?.identifier ?? ""
-    self.locale     = (l.languageCode?.identifier ?? "") + "_" + (l.region?.identifier ?? "")
-  }
-  
-
   public init(locale: String) {
     let region = Self.getLanguageRegion(from: locale)
 
