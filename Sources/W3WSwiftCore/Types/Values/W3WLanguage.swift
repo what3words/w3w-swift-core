@@ -37,7 +37,9 @@ extension W3WLanguage {
 }
 
 
-public struct W3WBaseLanguage: W3WLanguage {
+public struct W3WBaseLanguage: W3WLanguage, ExpressibleByStringLiteral {
+  public typealias StringLiteralType = String
+  
   
   /// name of the language
   public let name: String?
@@ -75,6 +77,11 @@ public struct W3WBaseLanguage: W3WLanguage {
     self.nativeName = nativeName
     self.code       = String(locale.prefix(2))
     self.locale     = locale
+  }
+  
+  
+  public init(stringLiteral: String) {
+    self.init(locale: stringLiteral)
   }
   
   

@@ -27,6 +27,14 @@ final class w3w_swift_typesTests: XCTestCase {
   }
 
   
+  func testLangauge() {
+    let language: W3WBaseLanguage = "mn_la"
+    
+    XCTAssertEqual(language.code, "mn")
+    XCTAssertEqual(language.locale, "mn_la")
+  }
+  
+  
   func testOptions() throws {
     
     //let custom1  = W3WOption(key: "yyy", value: "yyy")
@@ -51,9 +59,9 @@ final class w3w_swift_typesTests: XCTestCase {
   }
   
   
-  // maybe SDK only?
+  // maybe SDK only? as it has `contains`
 //  func testPolygon() throws {
-//    let polygon = W3WCorePolygon(points: [
+//    let polygon = W3WBasePolygon(points: [
 //      CLLocationCoordinate2D(latitude:  2.0, longitude: 2.0),
 //      CLLocationCoordinate2D(latitude:  0.0, longitude: 0.0),
 //      CLLocationCoordinate2D(latitude:  2.0, longitude: -2.0),
@@ -78,8 +86,6 @@ final class w3w_swift_typesTests: XCTestCase {
 //    XCTAssertFalse(polygon.contains(point: CLLocationCoordinate2D(latitude: -3.0, longitude: -3.0)))
 //    XCTAssertFalse(polygon.contains(point: CLLocationCoordinate2D(latitude:  0.0, longitude: -3.0)))
 //    XCTAssertFalse(polygon.contains(point: CLLocationCoordinate2D(latitude:  3.0, longitude: -3.0)))
-//
-//
 //  }
   
 }

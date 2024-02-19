@@ -21,6 +21,7 @@ public protocol W3WCountry {
 
 
 public struct W3WBaseCountry: W3WCountry, ExpressibleByStringLiteral {
+  public typealias StringLiteralType = String
   
   /// ISO 3166-1 alpha-2 country codes, such as US,CA
   public let code: String
