@@ -177,30 +177,6 @@ extension What3Words: W3WProtocolV4 {
   }
   
   
-//  func convert(from: W3WInputType) -> W3WSdkInputType {
-//    switch from {
-//    case .text:
-//      return .text
-//    case .genericVoice:
-//      return .genericVoice
-//    case .mawdoo3:
-//      return .mawdoo3
-//    case .mihup:
-//      return .mihup
-//    case .nmdpAsr:
-//      return .nmdpAsr
-//    case .ocrSdk:
-//      return .ocrSdk
-//    case .speechmatics:
-//      return .speechmatics
-//    case .voconHybrid:
-//      return .voconHybrid
-//    default:
-//      return .text
-//    }
-//  }
-  
-  
   func convert(from: [W3WOption]?) throws -> [W3WSdkOption] {
     var coreOptions = [W3WSdkOption]()
     
@@ -215,42 +191,6 @@ extension What3Words: W3WProtocolV4 {
     
     return coreOptions
   }
-  
-  
-  // MARK: Base options extension for SDK
-  
-  
-#if canImport(W3WSwiftApi)
-
-  
-//  /// Returns a list of 3 word addresses based on user input and other parameters.
-//  /// - parameter text: The full or partial 3 word address to obtain suggestions for. At minimum this must be the first two complete words plus at least one character from the third word.
-//  /// - parameter options: are provided as an array of W3SdkOption objects.
-//  /// - returns An array of W3WSuggestions
-//  /// - throws W3WSdkError
-//  public func autosuggest(text: String, options: [W3WOption]) throws -> [W3WSdkSuggestion] {
-//    return try autosuggest(text: text, options: convert(from: options))
-//  }
-//  
-//  /// Returns a list of 3 word addresses based on user input and other parameters.
-//  /// - parameter text: The full or partial 3 word address to obtain suggestions for. At minimum this must be the first two complete words plus at least one character from the third word.
-//  /// - parameter options: are provided in a W3SdkOptions object.
-//  /// - returns An array of W3WSuggestions
-//  /// - throws W3WSdkError
-//  public func autosuggest(text: String, options: W3WOptions?) throws -> [W3WSdkSuggestion] {
-//    return try autosuggest(text: text, options: convert(from: options?.options))
-//  }
-//
-//  /// Returns a list of 3 word addresses based on user input and other parameters.
-//  /// - parameter text: The full or partial 3 word address to obtain suggestions for. At minimum this must be the first two complete words plus at least one character from the third word.
-//  /// - parameter options: a single W3WOption
-//  /// - returns An array of W3WSuggestions
-//  /// - throws W3WSdkError
-//  public func autosuggest(text: String, options: W3WOption...) throws -> [W3WSdkSuggestion] {
-//    return try autosuggest(text: text, options: convert(from: options))
-//  }
-
-#endif
   
 }
 
