@@ -8,6 +8,7 @@
 import Foundation
 
 
+@available(*, deprecated, message: "use W3WTranslationsProtocol instead")
 public class W3WTranslations {
   
   public static let main = W3WTranslations()
