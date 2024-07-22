@@ -96,7 +96,7 @@ public struct W3WBaseSquare: W3WSquare {
 
 public protocol W3WAppSquareProtocol: W3WSquare {
   /// Secondary address
-  var secondaryAdress: String? { get }
+  var secondaryAddress: String? { get }
   
   /// Secondary language
   var secondaryLanguage: W3WLanguage? { get }
@@ -137,7 +137,7 @@ public struct W3WAppSquare: W3WAppSquareProtocol {
   public let bounds: W3WBaseBox?
   
   /// Secondary address
-  public let secondaryAdress: String?
+  public let secondaryAddress: String?
   
   /// Secondary language
   public let secondaryLanguage: W3WLanguage?
@@ -156,7 +156,7 @@ public struct W3WAppSquare: W3WAppSquareProtocol {
   
   public init(
     words: String? = nil,
-    secondaryAdress: String? = nil,
+    secondaryAddress: String? = nil,
     country: W3WBaseCountry? = nil,
     nearestPlace: String? = nil,
     distanceToFocus: W3WBaseDistance? = nil,
@@ -170,7 +170,7 @@ public struct W3WAppSquare: W3WAppSquareProtocol {
     isEditable: Bool? = nil
   ) {
     self.words = words
-    self.secondaryAdress = secondaryAdress
+    self.secondaryAddress = secondaryAddress
     self.country = country
     self.nearestPlace = nearestPlace
     self.distanceToFocus = distanceToFocus
