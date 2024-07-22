@@ -92,6 +92,95 @@ public struct W3WBaseSquare: W3WSquare {
     self.coordinates = coordinates
     self.bounds = bounds
   }
+}
 
+public protocol W3WAppSquareProtocol: W3WSquare {
+  /// Secondary address
+  var secondaryAdress: String? { get }
   
+  /// Secondary language
+  var secondaryLanguage: W3WLanguage? { get }
+  
+  /// the squares's label
+  var label: String? { get }
+  
+  /// If the square is saved
+  var isSaved: Bool? { get }
+  
+  /// If the square is shared
+  var isShared: Bool? { get }
+  
+  /// If the square is editable
+  var isEditable: Bool? { get }
+}
+
+public struct W3WAppSquare: W3WAppSquareProtocol {
+  /// three word address
+  public let words: String?
+  
+  /// ISO 3166-1 alpha-2 country codes, such as US,CA
+  public let country: W3WCountry?
+  
+  /// nearest place
+  public let nearestPlace: String?
+  
+  /// distance from focus in kilometers
+  public let distanceToFocus: W3WDistance?
+  
+  /// the language to use
+  public let language: W3WLanguage?
+  
+  /// coordinates of the square
+  public let coordinates: CLLocationCoordinate2D?
+  
+  /// the square's bounds
+  public let bounds: W3WBaseBox?
+  
+  /// Secondary address
+  public let secondaryAdress: String?
+  
+  /// Secondary language
+  public let secondaryLanguage: W3WLanguage?
+  
+  /// the squares's label
+  public let label: String?
+  
+  /// If the square is saved
+  public let isSaved: Bool?
+  
+  /// If the square is shared
+  public let isShared: Bool?
+  
+  /// If the square is editable
+  public let isEditable: Bool?
+  
+  public init(
+    words: String? = nil,
+    secondaryAdress: String? = nil,
+    country: W3WBaseCountry? = nil,
+    nearestPlace: String? = nil,
+    distanceToFocus: W3WBaseDistance? = nil,
+    language: W3WBaseLanguage? = nil,
+    secondaryLanguage: W3WBaseLanguage? = nil,
+    coordinates: CLLocationCoordinate2D? = nil,
+    bounds: W3WBaseBox? = nil,
+    label: String? = nil,
+    isSaved: Bool? = nil,
+    isShared: Bool? = nil,
+    isEditable: Bool? = nil
+  ) {
+    self.words = words
+    self.secondaryAdress = secondaryAdress
+    self.country = country
+    self.nearestPlace = nearestPlace
+    self.distanceToFocus = distanceToFocus
+    self.language = language
+    self.secondaryLanguage = secondaryLanguage
+    self.coordinates = coordinates
+    self.bounds = bounds
+    self.label = label
+    self.isSaved = isSaved
+    self.isShared = isShared
+    self.isEditable = isEditable
+  }
 }
