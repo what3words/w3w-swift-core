@@ -21,22 +21,6 @@ extension W3WSdkCountry: W3WCountry { }
 extension W3WSdkDistance: W3WDistance { }
 
 
-//  public var country: W3WBaseCountry? { get { return self.country } }
-//  public var distanceToFocus: W3WBaseDistance? { get { return self.distanceToFocus } }
-//  public var language: W3WBaseLanguage? { get { return self.language } }
-//  }
-//
-//extension W3WSdkBox: W3WBox { }
-//
-//extension W3WSdkSquare: W3WSquare {
-//  public var country: W3WBaseCountry? { get { return self.country } }
-//  public var distanceToFocus: W3WBaseDistance? { get { return self.distanceToFocus } }
-//  public var language: W3WBaseLanguage? { get { return self.language } }
-//  public var bounds: W3WBaseBox? { get { return self.bounds } }
-//}
-
-
-
 public extension W3WSdkSquare {
 
   func asBaseSquare() -> W3WSquare {
@@ -65,26 +49,5 @@ public extension W3WSdkSuggestion {
     )
   }
 }
-
-
-//extension W3WSdkLine {
-//  func asW3WLine() -> W3WLine {
-//    return W3WBaseLine(start: start, end: end)
-//  }
-//}
-//
-//
-//extension W3WSdkLanguage {
-//  func asW3WLanguage() -> W3WLanguage {
-//    return W3WBaseLanguage(locale: locale)
-//  }
-//}
-//
-//
-//extension W3WSdkCountry {
-//  func asW3WCountry() -> any W3WCountry {
-//    return W3WBaseCountry(code: code)
-//  }
-//}
 
 #endif
