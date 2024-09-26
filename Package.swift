@@ -15,5 +15,6 @@ let package = Package(
     targets: [
       .target(name: "W3WSwiftCore", dependencies: []),
       .testTarget(name: "w3w-swift-typesTests", dependencies: ["W3WSwiftCore"]),
+      .testTarget(name: "w3w-swift-Tests", dependencies: ["W3WSwiftCore"]),
     ]
 )
