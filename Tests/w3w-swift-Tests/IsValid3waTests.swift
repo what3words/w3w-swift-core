@@ -10,7 +10,7 @@ import XCTest
 
 class MockW3WProtocolV4 {
     
-    var autosuggestClosure: (String, [W3WOption]?, W3WSuggestionsResponse) -> Void = { _, _, _ in }
+        var autosuggestClosure: (String, [W3WOption]?, W3WSuggestionsResponse) -> Void = { _, _, _ in }
         
         public func autosuggest(text: String, completion: @escaping W3WSuggestionsResponse) {
             autosuggest(text: text, options: nil, completion: completion)
