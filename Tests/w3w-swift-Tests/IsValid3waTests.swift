@@ -26,7 +26,6 @@ class MockW3WProtocolV4 {
                     completion(false, W3WError.other(error))
                     return
                 }
-                
                 for suggestion in suggestions ?? [] {
                     let w1 = suggestion.words?.trimmingCharacters(in: CharacterSet(charactersIn: "/")).lowercased()
                     let w2 = words.trimmingCharacters(in: CharacterSet(charactersIn: "/")).lowercased()
@@ -41,8 +40,6 @@ class MockW3WProtocolV4 {
             }
         }
 }
-
-
 
 final class W3WProtocolV4Tests: XCTestCase {
     
