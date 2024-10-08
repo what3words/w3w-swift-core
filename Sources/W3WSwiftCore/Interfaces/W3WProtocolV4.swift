@@ -123,6 +123,7 @@ extension W3WProtocolV4 {
    - parameter text: The text to search through
    - parameter completion: returns true if the address is a real three word address
    */
+@available(*, deprecated, message: "Use isValid3wa(words: String, completion: @escaping (Bool, W3WError) -> ()) instead")
   public func isValid3wa(words: String, completion: @escaping (Bool) -> ()) {
     autosuggest(text: words) { suggestions, error in
       for suggestion in suggestions ?? [] {
@@ -142,3 +143,42 @@ extension W3WProtocolV4 {
   }
   
 }
+
+extension W3WProtocolV4 {
+    
+    /**
+     Verifies that the text is a valid three word address that successfully represents a square on earth.
+     - parameter text: The text to search through
+     - Parameter completion: It returns two parameters:
+                             - A `Bool` indicating whether the address is valid (`true`) or not (`false`).
+                             - A `W3WError` object providing more details about any error that occurred during validation.
+     */
+    
+    public func isValid3wa(words: String, completion: @escaping (Bool, W3WError?) -> ()) {
+      autosuggest(text: words) { suggestions, error in
+          
+          // Handle autosuggest error
+          if let error {
+              completion(false, W3WError.other(error))
+              return
+          }
+            
+          for suggestion in suggestions ?? [] {
+          // remove slashes and make lowercase for comparison
+          let w1 = suggestion.words?.trimmingCharacters(in: CharacterSet(charactersIn: "/")).lowercased()
+          let w2 = words.trimmingCharacters(in: CharacterSet(charactersIn: "/")).lowercased()
+          
+          if w1 == w2 {
+            completion(true, nil)
+            return
+          }
+        }
+        
+        // no match found
+        completion(false, W3WError.message("Not a valid what3words address"))
+      }
+    }
+}
+
+
+
