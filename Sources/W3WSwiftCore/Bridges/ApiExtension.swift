@@ -13,10 +13,8 @@
 import Foundation
 
 #if canImport(w3w)
-import w3w
-
-
 #if canImport(W3WSwiftApi)
+import w3w
 
 
 extension W3WProtocolV4 {
