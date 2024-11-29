@@ -8,6 +8,8 @@
 import Foundation
 
 
+#if !IMESSAGE
+#if !os(watchOS)
 #if canImport(w3w)
 import w3w
 
@@ -195,4 +197,6 @@ extension What3Words: W3WProtocolV4 {
 }
 
 
+#endif
+#endif
 #endif

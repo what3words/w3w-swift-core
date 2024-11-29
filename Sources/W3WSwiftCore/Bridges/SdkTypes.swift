@@ -8,6 +8,8 @@
 import Foundation
 
 
+#if !IMESSAGE
+#if !os(watchOS)
 #if canImport(w3w)
 import w3w
 
@@ -50,4 +52,6 @@ public extension W3WSdkSuggestion {
   }
 }
 
+#endif
+#endif
 #endif
