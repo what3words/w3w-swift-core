@@ -12,11 +12,11 @@
 
 import Foundation
 
+#if !IMESSAGE
+#if !os(watchOS)
 #if canImport(w3w)
-import w3w
-
-
 #if canImport(W3WSwiftApi)
+import w3w
 
 
 extension W3WProtocolV4 {
@@ -83,6 +83,6 @@ extension W3WProtocolV4 {
 
 
 #endif
-
-
+#endif
+#endif
 #endif

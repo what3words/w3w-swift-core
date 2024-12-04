@@ -35,6 +35,33 @@ final class w3w_swift_typesTests: XCTestCase {
   }
   
   
+  func testDeviceLangauges() {
+    let languages = W3WBaseLanguage.english.getDeviceLanguages()
+    print(languages)
+    
+    let assamese = languages.first(where: { lang in lang.locale == "as_IN" }) as? W3WBaseLanguage
+    XCTAssertTrue(assamese!.name!.contains("Assamese"))
+    XCTAssertTrue(assamese!.name!.contains("India"))
+    XCTAssertTrue(assamese!.nativeName!.contains("অসমীয়া"))
+    XCTAssertTrue(assamese!.code == "as")
+  }
+  
+  
+  func testLanguageNames() {
+    let french = W3WBaseLanguage(locale: "fr_ca")
+    XCTAssertTrue(french.name!.contains("French"))
+    XCTAssertTrue(french.nativeName!.contains("français"))
+    XCTAssertTrue(french.nativeName!.contains("Canada"))
+
+    let frenchfrench = W3WBaseLanguage(locale: "fr")
+    XCTAssertTrue(frenchfrench.name == "French")
+    XCTAssertTrue(frenchfrench.nativeName == "français")
+    
+    XCTAssertTrue(W3WBaseLanguage.english.name!.contains("English"))
+    XCTAssertTrue(W3WBaseLanguage.english.nativeName!.contains("English"))
+  }
+  
+  
   func testOptions() throws {
     
     //let custom1  = W3WOption(key: "yyy", value: "yyy")
