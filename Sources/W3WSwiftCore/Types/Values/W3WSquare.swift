@@ -33,11 +33,12 @@ public protocol W3WSquare: W3WSuggestion, CustomStringConvertible {
   /// the square's bounds
   var bounds: W3WBaseBox? { get }
   
+  /// Comparing current Square to another Square
+  func isEqual(to square: W3WSquare?) -> Bool?
 }
 
 
 public extension W3WSquare {
-  
   var description: String {
     var retval = ""
     
@@ -51,12 +52,14 @@ public extension W3WSquare {
     return retval.trimmingCharacters(in: .whitespaces)
   }
   
+  func isEqual(to square: W3WSquare?) -> Bool? {
+    self.bounds?.id == square?.bounds?.id
+  }
 }
   
 
 /// Object representing a W3W square
 public struct W3WBaseSquare: W3WSquare {
-  
   public typealias W3WBaseCountry = W3WCountry
   public typealias W3WBaseDistance = W3WDistance
   public typealias W3WBaseLanguage = W3WLanguage
