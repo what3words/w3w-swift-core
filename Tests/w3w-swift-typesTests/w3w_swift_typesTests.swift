@@ -64,10 +64,6 @@ final class w3w_swift_typesTests: XCTestCase {
   
   func testOptions() throws {
     
-    //let custom1  = W3WOption(key: "yyy", value: "yyy")
-    //let custom2  = W3WOption(key: .custom("xxx"), value: .custom("xxx"))
-    //let custom3  = W3WOption.custom(key: "zzz", value: "zzz")
-    
     let language0 = W3WOption.language(W3WBaseLanguage(code: "en"))
     let language1 = W3WOption.language(W3WBaseLanguage(code: "en_gb"))
 
