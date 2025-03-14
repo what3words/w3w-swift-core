@@ -117,10 +117,10 @@ open class W3WRequest {
     if let request = makeRequest(path: path, params: params, json: json, method: method) {
       
       // make the call
-      task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+      task = URLSession.shared.dataTask(with: request) { [weak self] (data, response, error) in
         
         // deal with the results, and complete with the info
-        self.processResults(data: data, response: response, error: error, completion: completion)
+        self?.processResults(data: data, response: response, error: error, completion: completion)
       }
       
       // start the call

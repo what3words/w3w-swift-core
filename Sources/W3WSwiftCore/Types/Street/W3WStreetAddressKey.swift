@@ -8,7 +8,8 @@
 
 
 public enum W3WStreetAddressKey: String {
-  case words = "words"
+  case words        = "words"
+  case nearestPlace = "nearestPlace"
 
   case address  = "address"
   case number   = "number"

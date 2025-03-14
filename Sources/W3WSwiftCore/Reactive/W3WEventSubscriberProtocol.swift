@@ -24,7 +24,11 @@ public extension W3WEventSubscriberProtocol {
   @discardableResult func subscribe<EventType: Subject>(to: EventType?, handler: @escaping (EventType.Output) -> ()) -> AnyCancellable? {
     let subscription = to?.sink(
       receiveCompletion: { _ in },
-      receiveValue: { event in  handler(event) })
+      receiveValue: { event in
+        W3WThread.runOnMain {
+          handler(event)
+        }
+      })
     
     if let s = subscription {
       subscriptions.insert(s)
