@@ -12,7 +12,7 @@ public enum W3WStreetAddressKey: String {
   case nearestPlace = "nearestPlace"
 
   case address  = "address"
-  case number   = "number"
+  case address2 = "address2"
   case street   = "street"
   case locality = "locality"
   case city     = "city"

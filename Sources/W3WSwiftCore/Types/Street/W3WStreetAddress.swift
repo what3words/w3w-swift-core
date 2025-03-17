@@ -59,9 +59,9 @@ open class W3WStreetAddress: CustomStringConvertible {
     var retval = [String]()
 
     var firstLine = [String]()
-    if let number = info[.number]   { firstLine.append(number) }
     if let street = info[.street]   { firstLine.append(street) }
     if let address = info[.address] { firstLine.append(address) }
+    if let address2 = info[.address2]   { firstLine.append(address2) }
     if firstLine.count > 0 {
       retval.append(firstLine.joined(separator: ", "))
     }
