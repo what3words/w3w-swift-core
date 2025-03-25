@@ -17,7 +17,8 @@ public enum W3WStreetAddressKey: String {
   case locality = "locality"
   case city     = "city"
   case postCode = "postCode"
-  case country  = "country"
+  case country   = "country"
+  case what3words = "what3words"
 
   case unknown = "unknown"
 }
