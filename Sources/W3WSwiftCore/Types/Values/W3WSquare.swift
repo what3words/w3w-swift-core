@@ -57,7 +57,6 @@ public extension W3WSquare {
   }
 }
   
-
 /// Object representing a W3W square
 public struct W3WBaseSquare: W3WSquare {
   public typealias W3WBaseCountry = W3WCountry
