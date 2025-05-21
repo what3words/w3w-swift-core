@@ -14,7 +14,7 @@ import Foundation
 import w3w
 
 
-extension What3Words: W3WProtocolV4 {
+extension What3Words: @retroactive W3WProtocolV4 {
     
   /// Converts a 3 word address to a position, expressed as coordinates of latitude and longitude.
   /// - parameter coordinates: A CLLocationCoordinate2D object
