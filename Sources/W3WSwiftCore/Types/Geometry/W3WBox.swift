@@ -35,16 +35,15 @@ public extension W3WBox {
 //    }
   
   var id: Int64 {
-      let sw = self.southWest
-      let ne = self.northEast
-
+    let sw = self.southWest
+     let ne = self.northEast
+//
       guard (-90...90).contains(sw.latitude), (-90...90).contains(ne.latitude) else {
           fatalError("Invalid latitude value: must be between -90 and 90")
       }
       guard (-180...180).contains(sw.longitude), (-180...180).contains(ne.longitude) else {
           fatalError("Invalid longitude value: must be between -180 and 180")
       }
-
       // Round to 5 decimal places to handle tiny precision differences
       let precision = 1e5 // 5 decimal places instead of 6
       
@@ -76,6 +75,7 @@ public extension W3WBox {
       }
       
       return hash
+
   }
   
 }

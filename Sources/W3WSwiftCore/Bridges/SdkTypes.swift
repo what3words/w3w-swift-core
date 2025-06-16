@@ -17,10 +17,10 @@ import w3w
 //// make the following conform to the main protocols
 
 
-extension W3WSdkLanguage: W3WLanguage { }
-extension W3WSdkLine: W3WLine { }
-extension W3WSdkCountry: W3WCountry { }
-extension W3WSdkDistance: W3WDistance { }
+extension W3WSdkLanguage: @retroactive W3WLanguage { }
+extension W3WSdkLine: @retroactive W3WLine { }
+extension W3WSdkCountry: @retroactive W3WCountry { }
+extension W3WSdkDistance: @retroactive W3WDistance { }
 
 
 public extension W3WSdkSquare {
