@@ -7,8 +7,6 @@
 
 import Foundation
 
-
-
 public struct W3WSettings {
   
   // mutable settings

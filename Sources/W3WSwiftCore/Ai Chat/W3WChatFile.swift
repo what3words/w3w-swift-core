@@ -7,6 +7,7 @@
 
 import Foundation
 
+
 public class W3WChatFile: Identifiable, Equatable, Hashable {
   
   public static func == (lhs: W3WChatFile, rhs: W3WChatFile) -> Bool {
@@ -48,6 +49,10 @@ public class W3WChatFile: Identifiable, Equatable, Hashable {
     case csv
     case txt
     case photo
+    case markdown
   }
   
 }
+
+
+extension W3WChatFile: @unchecked Sendable {}
