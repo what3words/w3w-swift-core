@@ -49,6 +49,7 @@ public class W3WChatFile: Identifiable, Equatable, Hashable {
     case csv
     case txt
     case photo
+    case markdown
   }
   
 }
