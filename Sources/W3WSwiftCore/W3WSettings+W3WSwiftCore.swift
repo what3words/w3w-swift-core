@@ -11,6 +11,8 @@ public struct W3WSettings {
   
   // mutable settings
   static public var measurement = W3WMeasurementSystem.system
+  
+  static public var separatorType = W3WSeparatorsType.firstCommaSecondDot
 
   // direction of writing
   static public var leftToRight = (NSLocale.characterDirection(forLanguage: NSLocale.preferredLanguages.first ?? W3WSettings.defaultLanguage.code) == Locale.LanguageDirection.leftToRight)
