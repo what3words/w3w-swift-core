@@ -37,6 +37,7 @@ extension W3WLanguage {
     return String(from.prefix(2))
   }
   
+  
   public static func getLanguageRegion(from: String) -> String {
     if from.count == 5 {
       if String(Array(from)[2]) == "_" {
@@ -86,6 +87,25 @@ extension W3WLanguage {
     return langauges
   }
 
+  
+  public func direction() -> W3WWritingDirection {
+    switch NSLocale.characterDirection(forLanguage: locale) {
+        
+      case .unknown:
+        return .leftToRight
+      case .leftToRight:
+        return .leftToRight
+      case .rightToLeft:
+        return .rightToLeft
+      case .topToBottom:
+        return .topToBottom
+      case .bottomToTop:
+        return .bottomToTop
+      @unknown default:
+        return .leftToRight
+    }
+  }
+  
 }
 
 

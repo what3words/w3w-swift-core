@@ -63,30 +63,37 @@ public extension W3WDistance {
     return nil
   }
   
-  
+  /// 12,000km or 12,000mi, etc...
   var description: String {
-    var distance = ""
-    
-    let formatter = MKDistanceFormatter()
-    formatter.unitStyle = .abbreviated
-    
-    
-    // if it is metric
-    if W3WSettings.measurement == .metric {
-      formatter.units = .metric
-      
-    // if it is imperial
-    } else if W3WSettings.measurement == .imperial {
-      formatter.units = .imperial
-
-    // otherwise use the system default
-    } else {
-      formatter.units = (getDefaultMeasurementSystem() == .metric) ? .metric : .imperial
+    let mileSuffix = "mi"
+    let kmSuffix = "km"
+    var suffix = ""
+    var finalDistance: Double = 0.0
+    switch W3WSettings.measurement {
+    case .imperial:
+      suffix = mileSuffix
+      finalDistance = miles
+    case .metric:
+      suffix = kmSuffix
+      finalDistance = kilometers
+    case .system:
+      suffix = getDefaultMeasurementSystem() == .imperial ? mileSuffix : kmSuffix
+      finalDistance = getDefaultMeasurementSystem() == .imperial ? miles : kilometers
     }
-
-    distance = formatter.string(fromDistance: meters)
     
-    return distance
+    if finalDistance < 0.01 {
+      return "<" + W3WSettings.separatorType.getFormattedString(for: 0.01) + suffix
+    }
+    
+    if finalDistance >= 1 {
+      return W3WSettings.separatorType.getFormattedString(for: finalDistance.rounded()) + suffix
+    }
+    
+    var stringFinalDistance = W3WSettings.separatorType.getFormattedString(for: finalDistance)
+    if stringFinalDistance.count > 4 {
+      stringFinalDistance = String(stringFinalDistance.prefix(4))
+    }
+    return stringFinalDistance + suffix
   }
   
   

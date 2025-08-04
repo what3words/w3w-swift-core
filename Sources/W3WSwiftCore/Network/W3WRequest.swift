@@ -23,11 +23,12 @@ public typealias W3WRequestResponse = ((_ code: Int?, _ result: Data?, _ error: 
 
 /// the method for the HTTPS request
 public enum W3WRequestMethod: String {
-  case get = "GET"
-  case post = "POST"
+  case get    = "GET"
+  case post   = "POST"
+  case put    = "PUT"
+  case patch  = "PATCH"
+  case delete = "DELETE"
 }
-
-
 /// A base class for making API calls to a service
 open class W3WRequest {
 
@@ -117,10 +118,10 @@ open class W3WRequest {
     if let request = makeRequest(path: path, params: params, json: json, method: method) {
       
       // make the call
-      task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+      task = URLSession.shared.dataTask(with: request) { [weak self] (data, response, error) in
         
         // deal with the results, and complete with the info
-        self.processResults(data: data, response: response, error: error, completion: completion)
+        self?.processResults(data: data, response: response, error: error, completion: completion)
       }
       
       // start the call
@@ -269,6 +270,11 @@ open class W3WRequest {
   /// make the value for a header in W3W format to indicate version number and other basic info
   public func getHeaderValue(version: String) -> String {
     return "what3words-Swift/" + version + " (Swift " + getSwiftVersion() + "; " + getOsName() + " "  + getOsVersion() + ")"
+  }
+  
+  ///make it public for accessing from the others modules
+  public func publicMakeRequest(path: String, params: [String:String]? = nil, json: [String:Any]? = nil, method: W3WRequestMethod = .get) -> URLRequest? {
+      return makeRequest(path: path, params: params, json: json, method: method)
   }
   
 }
