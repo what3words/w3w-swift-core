@@ -21,7 +21,7 @@ public protocol W3WEventSubscriberProtocol: AnyObject {
 @available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
 public extension W3WEventSubscriberProtocol {
   
-  @discardableResult func subscribe<EventType: Subject>(to: EventType?, handler: @escaping (EventType.Output) -> ()) -> AnyCancellable? {
+  @discardableResult func subscribe<EventType: Publisher>(to: EventType?, handler: @escaping (EventType.Output) -> ()) -> AnyCancellable? {
     let subscription = to?.sink(
       receiveCompletion: { _ in },
       receiveValue: { event in
