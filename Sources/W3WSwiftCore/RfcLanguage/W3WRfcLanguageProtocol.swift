@@ -14,6 +14,7 @@ public protocol W3WRfcLanguageProtocol: Equatable {
 }
 
 /// protocol to convert any language to W3WRfcLanguage
-public protocol W3WRfcLanguageConvertable {
-  func toRfcLanguage() -> any W3WRfcLanguageProtocol
+public protocol W3WRfcLanguageConvertable<Language> {
+  associatedtype Language: W3WRfcLanguageProtocol
+  func toRfcLanguage() -> Language
 }

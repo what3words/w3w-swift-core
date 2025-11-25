@@ -65,35 +65,33 @@ public extension W3WRfcLanguage {
       return
     }
     
-    // Split into parts (e.g. zh-Hans-CN → ["zh", "Hans", "CN"])
-    let parts = normalized.split(separator: "-").map(String.init)
-    
-    var langCode: String?
-    var script: String?
-    var region: String?
-    
-    if parts.count > 0 {
-      langCode = parts[0]
-    }
-    
-    if parts.count > 1 {
-      let part = parts[1]
-      // Detect if this is a script code (Titlecase and 4 letters)
-      if part.count == 4, part.first?.isUppercase == true {
-        script = part
-        if parts.count > 2 {
-          region = parts[2]
-        }
-      } else {
-        region = part
-      }
-    }
-    
-    // Create the RFC language struct
     if #available(iOS 16, *), #available(watchOS 9, *) {
       self.init(from: Locale.Language(identifier: normalized))
     } else {
-      // no script for iOS < 16
+      // Split into parts (e.g. zh-Hans-CN → ["zh", "Hans", "CN"])
+      let parts = normalized.split(separator: "-").map(String.init)
+      
+      var langCode: String?
+      var script: String?
+      var region: String?
+      
+      if parts.count > 0 {
+        langCode = parts[0]
+      }
+      
+      if parts.count > 1 {
+        let part = parts[1]
+        // Detect if this is a script code (Titlecase and 4 letters)
+        if part.count == 4, part.first?.isUppercase == true {
+          script = part
+          if parts.count > 2 {
+            region = parts[2]
+          }
+        } else {
+          region = part
+        }
+      }
+      
       self.init(languageCode: langCode, script: script, region: region)
     }
   }

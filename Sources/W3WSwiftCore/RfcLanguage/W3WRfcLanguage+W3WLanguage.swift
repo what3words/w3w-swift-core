@@ -17,10 +17,13 @@ public extension W3WRfcLanguageProtocol {
   }
 }
 
+@available(iOS 13.0.0, *)
+@available(watchOS 6.0.0, *)
 extension W3WBaseLanguage: W3WRfcLanguageConvertable {
   /// convert W3WBaseLanguage to any W3WRfcLanguageProtocol
-  public func toRfcLanguage() -> any W3WRfcLanguageProtocol {
+  public func toRfcLanguage() -> some W3WRfcLanguageProtocol {
     let parsedLocale = Locale(identifier: locale)
     return W3WRfcLanguage(locale: parsedLocale)
   }
 }
+
