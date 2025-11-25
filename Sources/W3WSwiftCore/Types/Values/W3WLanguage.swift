@@ -32,8 +32,17 @@ public protocol W3WLanguage {
 
 
 extension W3WLanguage {
+  /// To get the first 2 (or 3 max) in a locale string separated by "-", i.e: en-US / en
+  static func extractCode(from string: String) -> String {
+    let parts = string.split(separator: "-").map(String.init)
+    if !parts.isEmpty {
+      return parts[0]
+    }
+    return ""
+  }
+  
   public static func getLanguageCode(from: String) -> String {
-    return String(from.prefix(2))
+    return extractCode(from: from)
   }
   
   public static func getLanguageRegion(from: String) -> String {
@@ -121,8 +130,8 @@ public struct W3WBaseLanguage: W3WLanguage, ExpressibleByStringLiteral {
       self.nativeName = nativeName
     }
     
-    self.code       = String(code.prefix(2))
-    self.locale     = String(code.prefix(2))
+    self.code       = Self.extractCode(from: code)
+    self.locale     = Self.extractCode(from: code)
   }
   
   
@@ -144,13 +153,13 @@ public struct W3WBaseLanguage: W3WLanguage, ExpressibleByStringLiteral {
       self.nativeName = nativeName
     }
     
-    self.code       = String(locale.prefix(2))
+    self.code       = Self.extractCode(from: locale)
     self.locale     = locale
   }
   
   public init(code: String, locale: String, name: String = "", nativeName: String = "") {
-    self.code = String(code.prefix(2))
-    self.locale = String(locale.prefix(2))
+    self.code = Self.extractCode(from: code)
+    self.locale = Self.extractCode(from: locale)
     if name == "" {
       self.name = LanguageUtils.getLanguageName(forLocale: locale, inLocale: "en")
     } else {
@@ -169,6 +178,5 @@ public struct W3WBaseLanguage: W3WLanguage, ExpressibleByStringLiteral {
     self.init(locale: stringLiteral)
   }
   
-
   static public let english = W3WBaseLanguage(locale: "en_gb")
 }
