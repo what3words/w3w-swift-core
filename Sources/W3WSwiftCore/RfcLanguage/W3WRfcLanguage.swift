@@ -128,3 +128,12 @@ extension Locale.Language : W3WRfcLanguageProtocol {
   }
 }
 
+extension W3WRfcLanguage {
+  public var nativeName: String? {
+    return LanguageUtils.getLanguageName(forLocale: identifier, inLocale: identifier)
+  }
+  
+  public var name: String? {
+    return LanguageUtils.getLanguageName(forLocale: identifier, inLocale: "en")
+  }
+}
