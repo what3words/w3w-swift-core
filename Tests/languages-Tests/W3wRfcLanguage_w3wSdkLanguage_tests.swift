@@ -15,7 +15,7 @@ struct W3wRfcLanguage_W3wSdkLanguage_Tests {
   @Test
   func convertSdkLanguageToRfcLanguage_Success() throws {
     let sdkLanguage = try W3WSdkLanguage("fr_fr")
-    let convertedRfcLanguage = sdkLanguage.toRfcLanguage() as! W3WRfcLanguage
+    let convertedRfcLanguage = try #require(sdkLanguage.toRfcLanguage() as? W3WRfcLanguage)
     let rfcLanguage = W3WRfcLanguage(from: "fr_FR")
     
     #expect(convertedRfcLanguage == rfcLanguage)
@@ -30,7 +30,7 @@ struct W3wRfcLanguage_W3wSdkLanguage_Tests {
   @Test
   func convertSdkLanguageToRfcLanguage_CodeOnly_Success() throws {
     let sdkLanguage = try W3WSdkLanguage("ja")
-    let convertedRfcLanguage = sdkLanguage.toRfcLanguage() as! W3WRfcLanguage
+    let convertedRfcLanguage = try #require(sdkLanguage.toRfcLanguage() as? W3WRfcLanguage)
     let rfcLanguage = W3WRfcLanguage(from: "ja")
     
     #expect(convertedRfcLanguage == rfcLanguage)
@@ -78,8 +78,8 @@ struct W3wRfcLanguage_W3wSdkLanguage_Tests {
     let w3wBaseLanguage = W3WBaseLanguage(locale: string)
     let w3wSdkLanguage = try W3WSdkLanguage(sdkString)
     
-    let firstLang = w3wBaseLanguage.toRfcLanguage() as! W3WRfcLanguage
-    let secondLang = w3wSdkLanguage.toRfcLanguage() as! W3WRfcLanguage
+    let firstLang = try #require(w3wBaseLanguage.toRfcLanguage() as? W3WRfcLanguage)
+    let secondLang = try #require(w3wSdkLanguage.toRfcLanguage() as? W3WRfcLanguage)
     
     #expect(firstLang == secondLang)
     #expect(firstLang.code == secondLang.code)
