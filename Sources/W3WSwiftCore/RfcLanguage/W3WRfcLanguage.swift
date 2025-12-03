@@ -14,6 +14,9 @@ import Foundation
 /// - script (optional, 4 letters, titlecased)
 /// - region (optional, 2 letters or 3-digit number)
 public struct W3WRfcLanguage: W3WRfcLanguageProtocol {
+  /// default language is "en". name's default can be changed externally to use a different language by an app if nessesary
+  public static var `default` = W3WRfcLanguage(code: "en")
+  
   public var code: String?
   public var scriptCode: String?
   public var regionCode: String?
@@ -24,22 +27,20 @@ public struct W3WRfcLanguage: W3WRfcLanguageProtocol {
       self.init(from: locale.language)
     } else {
       // no script for iOS < 16
-      self.init(
-        languageCode: locale.languageCode,
-        script: locale.scriptCode,
-        region: locale.regionCode
-      )
+      self.init(code: locale.languageCode,
+                scriptCode: locale.scriptCode,
+                regionCode: locale.regionCode)
     }
   }
   
   public init(
-    languageCode: String? = nil,
-    script: String? = nil,
-    region: String? = nil
+    code: String? = nil,
+    scriptCode: String? = nil,
+    regionCode: String? = nil
   ) {
-    self.code = languageCode
-    self.scriptCode = script
-    self.regionCode = region
+    self.code = code
+    self.scriptCode = scriptCode
+    self.regionCode = regionCode
   }
   
   @available(iOS 16, *)
@@ -61,7 +62,7 @@ public extension W3WRfcLanguage {
     
     // Handle “Base” or empty strings, check if string is a valid locale string
     guard !normalized.isEmpty, string.isValidLocale else {
-      self.init(languageCode: nil, script: nil, region: nil)
+      self.init(code: nil, scriptCode: nil, regionCode: nil)
       return
     }
     
@@ -92,7 +93,7 @@ public extension W3WRfcLanguage {
         }
       }
       
-      self.init(languageCode: langCode, script: script, region: region)
+      self.init(code: langCode, scriptCode: script, regionCode: region)
     }
   }
 }
@@ -103,7 +104,7 @@ public extension W3WRfcLanguageProtocol {
     return [code, scriptCode, regionCode]
       .compactMap { $0 }
       .joined(separator: "-")
-    }
+  }
   /// short : code - region
   var shortIdentifier: String {
     return [code, regionCode]
@@ -134,6 +135,11 @@ extension W3WRfcLanguage {
   }
   
   public var name: String? {
-    return LanguageUtils.getLanguageName(forLocale: identifier, inLocale: "en")
+    return LanguageUtils.getLanguageName(forLocale: identifier, inLocale: Self.default.identifier)
+  }
+  
+  /// get name of the language in any particular locale
+  func name(in locale: String) -> String? {
+    return LanguageUtils.getLanguageName(forLocale: identifier, inLocale: locale)
   }
 }
