@@ -142,4 +142,9 @@ extension W3WRfcLanguage {
   func name(in locale: String) -> String? {
     return LanguageUtils.getLanguageName(forLocale: identifier, inLocale: locale)
   }
+  
+  /// get name of the language in any other language
+  func name(in language: W3WRfcLanguage) -> String? {
+    return name(in: language.identifier)
+  }
 }
