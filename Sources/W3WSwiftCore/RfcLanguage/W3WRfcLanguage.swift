@@ -111,6 +111,23 @@ public extension W3WRfcLanguageProtocol {
       .compactMap { $0 }
       .joined(separator: "-")
   }
+  
+  func direction() -> W3WWritingDirection {
+    switch NSLocale.characterDirection(forLanguage: identifier) {
+      case .unknown:
+        return .leftToRight
+      case .leftToRight:
+        return .leftToRight
+      case .rightToLeft:
+        return .rightToLeft
+      case .topToBottom:
+        return .topToBottom
+      case .bottomToTop:
+        return .bottomToTop
+      @unknown default:
+        return .leftToRight
+    }
+  }
 }
 
 @available(watchOS 9, *)
