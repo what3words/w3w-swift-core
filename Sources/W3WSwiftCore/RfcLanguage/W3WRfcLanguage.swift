@@ -147,6 +147,9 @@ extension Locale.Language : W3WRfcLanguageProtocol {
 }
 
 extension W3WRfcLanguage {
+  /// this is returned correctly as long as OS recognizes the language code,
+  /// or else it will be the name in English (the same as name below)
+  /// this can happen as we have some sdk languages which are not supported by OS, ex: mn-Latn
   public var nativeName: String? {
     return LanguageUtils.getLanguageName(forLocale: identifier, inLocale: identifier)
   }
