@@ -61,7 +61,7 @@ public extension W3WRfcLanguage {
       .replacingOccurrences(of: "_", with: "-")
     
     // Handle “Base” or empty strings, check if string is a valid locale string
-    guard !normalized.isEmpty, string.isValidLocale else {
+    guard !normalized.isEmpty else {
       self.init(code: nil, scriptCode: nil, regionCode: nil)
       return
     }
