@@ -60,7 +60,7 @@ public extension W3WRfcLanguage {
       .trimmingCharacters(in: .whitespacesAndNewlines)
       .replacingOccurrences(of: "_", with: "-")
     
-    // Handle “Base” or empty strings, check if string is a valid locale string
+    // Check not empty string
     guard !normalized.isEmpty else {
       self.init(code: nil, scriptCode: nil, regionCode: nil)
       return
