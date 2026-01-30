@@ -109,7 +109,7 @@ struct w3wRfcLanguage_tests {
     let lang6 = try W3WRfcLanguage(code: "kk", iOSCompatible: true)
     #expect(lang6.code == "kk")
     #expect(lang6.name == "Kazakh")
-  }
+}
   
   /// List of our current w3w languages
   /// with the check iOS compatible, all languages except exceptions will be init successfully
@@ -131,9 +131,30 @@ struct w3wRfcLanguage_tests {
       }
     } else {
       let rfcLanguage = try W3WRfcLanguage(from: lang, iOSCompatible: true)
-      print(lang)
       #expect(rfcLanguage.code != nil)
     }
+  }
+  
+  @Test(arguments: [
+    "af", "am", "ar", "bn", "bs-Cyrl", "bs-Latn", "bg", "ca", "zh-Hant-HK",
+    "zh-Hant-TW", "zh-Hans", "hr", "cs", "da", "nl", "en-AU", "en-CA",
+    "en-GB", "en-IN", "en-US", "et", "fi", "fr-FR", "fr-CA", "de", "el",
+    "gu", "he", "hi", "hu", "id", "it", "ja", "kn", "kk-Cyrl", "kk-Latn",
+    "km", "ko", "lo", "ms", "ml", "mr", "mn-Cyrl", "mn-Latn", "sr-Cyrl-ME",
+    "sr-Latn-ME", "ne", "no", "or", "fa", "pl", "pt-PT", "pt-BR", "pa",
+    "ro", "ru", "sr-Cyrl-RS", "sr-Latn-RS", "si", "sk", "sl", "es-ES",
+    "es-MX", "sw", "sv", "ta", "te", "th", "tr", "uk", "ur", "vi", "cy",
+    "xh", "zu"
+])
+  func initRfcLanguage_fromW3WLanguages_NoCompatibilityCheck(lang: String) throws {
+    let rfcLanguage = try W3WRfcLanguage(from: lang, iOSCompatible: false)
+    #expect(rfcLanguage.code != nil)
+    if exceptions.contains(lang) {
+      #expect(!rfcLanguage.iOSCompatible)
+    } else {
+      #expect(rfcLanguage.iOSCompatible)
+    }
+
   }
 }
 
