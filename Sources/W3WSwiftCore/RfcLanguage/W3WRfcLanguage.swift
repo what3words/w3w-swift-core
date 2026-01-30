@@ -51,9 +51,9 @@ public struct W3WRfcLanguage: W3WRfcLanguageProtocol {
     regionCode: String? = nil,
     iOSCompatible: Bool
   ) throws {
-    let string = [code, scriptCode, regionCode].compactJoined()
     // 1. Validate only if iOS compatibility is required
     if iOSCompatible {
+      let string = [code, scriptCode, regionCode].compactJoined()
       try Self.validateiOSCompatibility(identifier: string)
     }
     self.code = code
