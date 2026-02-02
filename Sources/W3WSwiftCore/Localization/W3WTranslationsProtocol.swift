@@ -18,17 +18,6 @@ public protocol W3WTranslationsProtocol: W3WAvailableLanguageProtocol {
   ///     - id: a translation id
   ///     - language: the language to translate into
   func get(id: String, language: W3WLanguage?) -> String
-  
-}
-
-public protocol W3WLanguageSelectionProtocol  {
-  /// to set RFCLanguage
-  func set(language: W3WRfcLanguage)
-}
-
-/// list out all available RFCLanguages
-public protocol W3WAvailableLanguageProtocol {
-  func availableLanguages() -> [W3WRfcLanguage]
 }
 
 public extension W3WTranslationsProtocol {
@@ -49,12 +38,5 @@ public extension W3WTranslationsProtocol {
   func get(id: String, _ arguments: CVarArg...) -> String {
     let localized = get(id: id)
     return String(format: localized, arguments)
-  }
-}
-
-public extension W3WAvailableLanguageProtocol {
-  /// default convenience func for available languages, should override when in need
-  func availableLanguages() -> [W3WRfcLanguage] {
-    return []
   }
 }
