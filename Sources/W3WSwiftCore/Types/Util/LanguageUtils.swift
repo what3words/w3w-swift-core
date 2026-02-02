@@ -30,6 +30,18 @@ public class LanguageUtils {
 extension String {
   var isValidLocale: Bool {
     let normalized = self.replacingOccurrences(of: "-", with: "_")
-    return Locale.availableIdentifiers.contains(normalized)
+    /// 1. Direct check
+    if Locale.availableIdentifiers.contains(normalized) {
+      return true
+    }
+    /// 2. Fallback: Strip the script code and check again
+    /// Ex: en_Latn_IN -> en_IN
+    let components = Locale.components(fromIdentifier: normalized)
+    if let language = components[NSLocale.Key.languageCode.rawValue], let region = components[NSLocale.Key.countryCode.rawValue] {
+      let shortIdentifier = "\(language)_\(region)"
+      return Locale.availableIdentifiers.contains(shortIdentifier)
+    }
+    
+    return false
   }
 }
