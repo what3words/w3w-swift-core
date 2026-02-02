@@ -7,6 +7,7 @@
 import Foundation
 
 public class LanguageUtils {
+  
   /// gets the langauge name for a locale in the language specified by 'inLocale'
   /// Parameters
   ///   - forLocale: locale to find the language of
@@ -25,6 +26,18 @@ public class LanguageUtils {
     
     return languageName
   }
+  
+  
+  public static func availableLanguages() -> [any W3WRfcLanguageProtocol] {
+    var languages = [W3WRfcLanguage]()
+    
+    for language in Locale.availableIdentifiers {
+      languages.append(W3WRfcLanguage(from: language))
+    }
+    
+    return languages
+  }
+  
 }
 
 extension String {

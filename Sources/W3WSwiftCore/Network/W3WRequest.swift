@@ -140,6 +140,39 @@ open class W3WRequest {
   
   
   /**
+   Calls w3w URL with async
+   - parameter path: The URL to call
+   - parameter params: dictionary of parameters to send on querystring
+   - parameter completion: The completion handler
+   */
+  @available(iOS 15.0, *)
+  public func call<T: Codable>(path: String, params: [String:String]? = nil, json: [String:Any]? = nil, method: W3WRequestMethod = .get) async throws -> T {
+    // generate the request
+    if let request = makeRequest(path: path, params: params, json: json, method: method) {
+      
+      // Call the actual endpoint
+      let (data, metadata) = try await URLSession.shared.data(for: request)
+
+      // deal with the results
+      if let md = metadata as? HTTPURLResponse {
+
+        // return results if good
+        if md.statusCode == 200 {
+          return try W3WJson<T>.decode(json: data)
+          
+        // if the gttp code is anything but 200 return it in an error
+        } else {
+          throw W3WError.code(md.statusCode, "HTTP Error \(md.statusCode)")
+        }
+      }
+    }
+
+    // if we made it here, sometning went wrong with the request
+    throw W3WError.message("bad request")
+  }
+  
+  
+  /**
    given a path and parameters, make a URLRequest object
    - parameter path: The URL to call
    - parameter params: disctionary of parameters to send on querystring
