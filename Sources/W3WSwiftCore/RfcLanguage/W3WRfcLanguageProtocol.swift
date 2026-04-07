@@ -72,6 +72,11 @@ public extension W3WRfcLanguageProtocol {
   }
 }
 
+public extension W3WRfcLanguageProtocol {
+  ///Exceptional cases
+  var exceptionalCases: [String: String] { return [:] }
+}
+
 public enum LanguageError: Error {
   case languageNotSupportedByOS
 }
