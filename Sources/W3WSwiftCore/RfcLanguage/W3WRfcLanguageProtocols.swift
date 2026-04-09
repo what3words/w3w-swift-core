@@ -24,7 +24,7 @@ public extension W3WAvailableLanguageProtocol {
   }
 }
 
-public protocol W3WExceptionalLanguagesProtocol {
+public protocol W3WExceptionalLanguageProtocol {
   ///Exceptional cases
   var exceptionalCases: [String: String] { get }
 }
