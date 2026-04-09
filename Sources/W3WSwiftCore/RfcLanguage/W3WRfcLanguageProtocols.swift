@@ -14,8 +14,6 @@ public protocol W3WLanguageSelectionProtocol {
 
 /// list out all available RFCLanguages
 public protocol W3WAvailableLanguageProtocol {
-  ///Exceptional cases
-  var exceptionalCases: [String: String] { get }
   func availableLanguages() -> [W3WRfcLanguage]
 }
 
@@ -24,8 +22,9 @@ public extension W3WAvailableLanguageProtocol {
   func availableLanguages() -> [W3WRfcLanguage] {
     return []
   }
-  
-  var exceptionalCases: [String: String] {
-    return [:]
-  }
+}
+
+public protocol W3WExceptionalLanguagesProtocol {
+  ///Exceptional cases
+  var exceptionalCases: [String: String] { get }
 }
