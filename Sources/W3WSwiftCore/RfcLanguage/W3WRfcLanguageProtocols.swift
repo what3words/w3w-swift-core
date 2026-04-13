@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol W3WLanguageSelectionProtocol  {
+public protocol W3WLanguageSelectionProtocol {
   /// to set RFCLanguage
   func set(language: any W3WRfcLanguageProtocol)
 }
@@ -22,4 +22,9 @@ public extension W3WAvailableLanguageProtocol {
   func availableLanguages() -> [W3WRfcLanguage] {
     return []
   }
+}
+
+public protocol W3WExceptionalLanguageProtocol {
+  ///Exceptional cases
+  var exceptionalCases: [String: String] { get }
 }
