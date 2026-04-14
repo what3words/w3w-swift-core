@@ -12,11 +12,8 @@ import Combine
 
 @available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
 public protocol W3WEventSubscriberProtocol: AnyObject {
-  
   var subscriptions: W3WEventsSubscriptions { get set }
-  
 }
-
 
 @available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
 public extension W3WEventSubscriberProtocol {
@@ -36,7 +33,6 @@ public extension W3WEventSubscriberProtocol {
     
     return subscription
   }
-  
   
   func type(for type: Any.Type) -> String {
     return String(describing: type)
