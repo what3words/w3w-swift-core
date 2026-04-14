@@ -6,7 +6,7 @@
 //
 
 
-public protocol W3WTranslationsProtocol {
+public protocol W3WTranslationsProtocol: W3WAvailableLanguageProtocol {
   
   /// given a translation id return the translation for the given device locale
   /// - Parameters:
@@ -18,9 +18,7 @@ public protocol W3WTranslationsProtocol {
   ///     - id: a translation id
   ///     - language: the language to translate into
   func get(id: String, language: W3WLanguage?) -> String
-  
 }
-
 
 public extension W3WTranslationsProtocol {
   

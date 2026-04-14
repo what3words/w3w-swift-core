@@ -32,11 +32,18 @@ public protocol W3WLanguage {
 
 
 extension W3WLanguage {
-  
-  public static func getLanguageCode(from: String) -> String {
-    return String(from.prefix(2))
+  /// To get the first 2 (or 3 max) in a locale string separated by "-", i.e: en-US / en
+  static func extractCode(from string: String) -> String {
+    let parts = string.split(separator: "-").map(String.init)
+    if !parts.isEmpty {
+      return parts[0]
+    }
+    return ""
   }
   
+  public static func getLanguageCode(from: String) -> String {
+    return extractCode(from: from)
+  }
   
   public static func getLanguageRegion(from: String) -> String {
     if from.count == 5 {
@@ -51,35 +58,14 @@ extension W3WLanguage {
     return ""
   }
 
-  
-  /// gets the langauge name for a locale in the language specified by 'inLocale'
-  /// Parameters
-  ///   - forLocale: locale to find the language of
-  ///   - inLocale: locale to translate the langauge name into
-  public static func getLanguageName(forLocale: String, inLocale: String) -> String? {
-    let inLocaleObj  = NSLocale(localeIdentifier: inLocale)
-    let forLocaleObj = NSLocale(localeIdentifier: forLocale)
-    
-    var langaugeName = inLocaleObj.localizedString(forLanguageCode: forLocale) ?? ""
-    
-    if forLocale.count > 2 {
-      if let countryCode = forLocaleObj.countryCode {
-        langaugeName += " (" + (inLocaleObj.localizedString(forCountryCode: countryCode) ?? "") + ")"
-      }
-    }
-    
-    return langaugeName
-  }
-
-  
   public func getDeviceLanguages() -> [W3WLanguage] {
     var langauges = [W3WLanguage]()
     
     for locale_code in NSLocale.availableLocaleIdentifiers.sorted() {
       let language = W3WBaseLanguage(
         locale: locale_code,
-        name: Self.getLanguageName(forLocale: locale_code, inLocale: self.locale) ?? "",
-        nativeName: Self.getLanguageName(forLocale: locale_code, inLocale: locale_code) ?? ""
+        name: LanguageUtils.getLanguageName(forLocale: locale_code, inLocale: self.locale) ?? "",
+        nativeName: LanguageUtils.getLanguageName(forLocale: locale_code, inLocale: locale_code) ?? ""
       )
       langauges.append(language)
     }
@@ -133,19 +119,19 @@ public struct W3WBaseLanguage: W3WLanguage, ExpressibleByStringLiteral {
   ///   - nativeName: Name of the langiage in that language
   public init(code: String, name: String = "", nativeName: String = "") {
     if name == "" {
-      self.name = Self.getLanguageName(forLocale: code, inLocale: "en")
+      self.name = LanguageUtils.getLanguageName(forLocale: code, inLocale: "en")
     } else {
       self.name = name
     }
     
     if nativeName == "" {
-      self.nativeName = Self.getLanguageName(forLocale: code, inLocale: code)
+      self.nativeName = LanguageUtils.getLanguageName(forLocale: code, inLocale: code)
     } else {
       self.nativeName = nativeName
     }
     
-    self.code       = String(code.prefix(2))
-    self.locale     = String(code.prefix(2))
+    self.code       = Self.extractCode(from: code)
+    self.locale     = Self.extractCode(from: code)
   }
   
   
@@ -156,19 +142,35 @@ public struct W3WBaseLanguage: W3WLanguage, ExpressibleByStringLiteral {
   ///   - nativeName: Name of the langiage in that language
   public init(locale: String, name: String = "", nativeName: String = "") {
     if name == "" {
-      self.name = Self.getLanguageName(forLocale: locale, inLocale: "en")
+      self.name = LanguageUtils.getLanguageName(forLocale: locale, inLocale: "en")
     } else {
       self.name = name
     }
     
     if nativeName == "" {
-      self.nativeName = Self.getLanguageName(forLocale: locale, inLocale: locale)
+      self.nativeName = LanguageUtils.getLanguageName(forLocale: locale, inLocale: locale)
     } else {
       self.nativeName = nativeName
     }
     
-    self.code       = String(locale.prefix(2))
+    self.code       = Self.extractCode(from: locale)
     self.locale     = locale
+  }
+  
+  public init(code: String, locale: String, name: String = "", nativeName: String = "") {
+    self.code = Self.extractCode(from: code)
+    self.locale = Self.extractCode(from: locale)
+    if name == "" {
+      self.name = LanguageUtils.getLanguageName(forLocale: locale, inLocale: "en")
+    } else {
+      self.name = name
+    }
+    
+    if nativeName == "" {
+      self.nativeName = LanguageUtils.getLanguageName(forLocale: locale, inLocale: locale)
+    } else {
+      self.nativeName = nativeName
+    }
   }
   
   
@@ -176,6 +178,5 @@ public struct W3WBaseLanguage: W3WLanguage, ExpressibleByStringLiteral {
     self.init(locale: stringLiteral)
   }
   
-
   static public let english = W3WBaseLanguage(locale: "en_gb")
 }
