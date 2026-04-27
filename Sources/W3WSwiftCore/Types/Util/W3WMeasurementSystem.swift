@@ -15,13 +15,21 @@ public enum W3WMeasurementSystem {
   case system
 }
 
-public enum W3WSeparatorsType {
-  case firstCommaSecondDot
-  case firstDotSecondComma
-  case firstSpaceSecondDot
-  case firstSpaceSecondComma
-  case firstWithoutSecondDot
-  case firstWithoutSecondComma
+public enum W3WSeparatorsType: String, CaseIterable {
+  case firstCommaSecondDot = "commadot"
+  case firstDotSecondComma = "dotcomma"
+  case firstSpaceSecondDot = "spacedot"
+  case firstSpaceSecondComma = "spacecomma"
+  case firstWithoutSecondDot = "nonedot"
+  case firstWithoutSecondComma = "nonecomma"
+  
+  
+  public init?(rawValue: String) {
+    guard let value = Self.allCases.first(where: { $0.rawValue == rawValue }) else {
+      return nil
+    }
+    self = value
+  }
     
   /// 12,000 or 12.000 or 12 000, etc..
   public func getFormattedString(for value: Double) -> String {

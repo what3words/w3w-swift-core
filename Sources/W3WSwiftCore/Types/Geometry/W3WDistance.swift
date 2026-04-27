@@ -112,6 +112,102 @@ public extension W3WDistance {
     return system
   }
   
+  
+  func asString(format: W3WSeparatorsType? = .firstCommaSecondDot, system: W3WMeasurementSystem?) -> String {
+    let theSystem = system ?? getDefaultMeasurementSystem()
+    
+    if case .metric = theSystem {
+      return self.format(number: kilometers, format: format) + "km"
+    }
+    
+    if case .imperial = theSystem {
+      return self.format(number: miles, format: format) + "mi"
+    }
+    
+    return self.format(number: kilometers, format: format) + "km"
+  }
+  
+  
+  private func format(number: Double, format: W3WSeparatorsType?) -> String {
+    switch format {
+      case .firstCommaSecondDot:
+        return self.format(number: number, thousands: ",", decimal: ".")
+      case .firstDotSecondComma:
+        return self.format(number: number, thousands: ".", decimal: ",")
+      case .firstSpaceSecondDot:
+        return self.format(number: number, thousands: " ", decimal: ".")
+      case .firstSpaceSecondComma:
+        return self.format(number: number, thousands: " ", decimal: ",")
+      case .firstWithoutSecondDot:
+        return self.format(number: number, thousands: "", decimal: ".")
+      case .firstWithoutSecondComma:
+        return self.format(number: number, thousands: "", decimal: ",")
+      case nil:
+        return "MISSING CASE HERE" + #function
+    }
+  }
+  
+  
+  // AI PRODUCED
+  private func format(number: Double, thousands: String, decimal: Character) -> String {
+    let n = round(number: number, significantDigits: 3)
+    let roundedNumber = (n * 100).rounded() / 100
+    let sign = roundedNumber < 0 ? "-" : ""
+    let absoluteNumber = abs(Double(roundedNumber))
+    let integerPart = Int(absoluteNumber)
+    let fractionalPart = Int(((absoluteNumber - Double(integerPart)) * 100).rounded())
+
+    let integerString = String(integerPart)
+    var formattedInteger = ""
+
+    for (index, character) in integerString.reversed().enumerated() {
+      if !thousands.isEmpty, index > 0, index % 3 == 0 {
+        formattedInteger = thousands + formattedInteger
+      }
+      formattedInteger.insert(character, at: formattedInteger.startIndex)
+    }
+
+    guard fractionalPart > 0 else {
+      return sign + formattedInteger
+    }
+
+    let fractionString = String(format: "%02d", fractionalPart)
+      .replacingOccurrences(of: "0+$", with: "", options: .regularExpression)
+
+    return sign + formattedInteger + String(decimal) + fractionString
+  }
+  
+  
+  // AI PRODUCED
+  private func round(number: Double, significantDigits: Int) -> Double {
+    // Handle non-finite values by returning the input
+    guard number.isFinite else { return number }
+
+    // Normalize significant digits to at least 1
+    let sig = max(1, significantDigits)
+
+    let absNumber = abs(number)
+
+    // Zero is a special case: it has no meaningful magnitude; return 0
+    if absNumber == 0 { return 0 }
+
+    // Compute number of digits in the integer part using log10 (for non-zero absNumber)
+    // integerDigits = floor(log10(absNumber)) + 1
+    let magnitude = floor(log10(absNumber))
+    let integerDigits = Int(magnitude) + 1
+
+    // Determine how many fractional digits are needed to satisfy significant digits
+    let fractionalDigits = max(0, sig - max(1, integerDigits))
+
+    // Round by scaling with 10^fractionalDigits
+    let scale = pow(10.0, Double(fractionalDigits))
+    let rounded = (number * scale).rounded() / scale
+
+    return rounded
+  }
+
+
+  
 }
 
 

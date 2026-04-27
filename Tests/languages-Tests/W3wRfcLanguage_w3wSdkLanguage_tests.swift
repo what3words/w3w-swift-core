@@ -6,7 +6,9 @@
 //
 
 import Testing
+import Foundation
 @testable import W3WSwiftCore
+#if canImport(w3w)
 import w3w
 
 @Suite
@@ -87,3 +89,4 @@ struct W3wRfcLanguage_W3wSdkLanguage_Tests {
   }
 }
 
+#endif

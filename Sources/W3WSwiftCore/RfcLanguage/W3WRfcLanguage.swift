@@ -43,6 +43,24 @@ public struct W3WRfcLanguage: W3WRfcLanguageProtocol {
     self.regionCode = regionCode
   }
   
+  /// if you want to init and validate that the language is supported on os, set `iOSCompatible` = `true`, or else = `false`
+  /// if it's not valid, an error will be thrown
+  public init(
+    code: String? = nil,
+    scriptCode: String? = nil,
+    regionCode: String? = nil,
+    iOSCompatible: Bool
+  ) throws {
+    // 1. Validate only if iOS compatibility is required
+    if iOSCompatible {
+      let string = [code, scriptCode, regionCode].compactJoined()
+      try Self.validateiOSCompatibility(identifier: string)
+    }
+    self.code = code
+    self.scriptCode = scriptCode
+    self.regionCode = regionCode
+  }
+  
   @available(iOS 16, *)
   @available(watchOS 9, *)
   public init(from language: Locale.Language) {
@@ -53,6 +71,15 @@ public struct W3WRfcLanguage: W3WRfcLanguageProtocol {
 }
 
 public extension W3WRfcLanguage {
+  /// if you want to init and validate that the language is supported on os, set `iOSCompatible` = `true`, or else = `false`
+  /// if it's not valid, an error will be thrown
+  init(from string: String, iOSCompatible: Bool) throws {
+    if iOSCompatible {
+      try Self.validateiOSCompatibility(identifier: string)
+    }
+    
+    self.init(from: string)
+  }
   /// Initialize from a string
   init(from string: String) {
     // Normalize separators
@@ -60,8 +87,8 @@ public extension W3WRfcLanguage {
       .trimmingCharacters(in: .whitespacesAndNewlines)
       .replacingOccurrences(of: "_", with: "-")
     
-    // Handle “Base” or empty strings, check if string is a valid locale string
-    guard !normalized.isEmpty, string.isValidLocale else {
+    // Check not empty string
+    guard !normalized.isEmpty else {
       self.init(code: nil, scriptCode: nil, regionCode: nil)
       return
     }
@@ -98,38 +125,6 @@ public extension W3WRfcLanguage {
   }
 }
 
-public extension W3WRfcLanguageProtocol {
-  /// full version: code - script - region
-  var identifier: String {
-    return [code, scriptCode, regionCode]
-      .compactMap { $0 }
-      .joined(separator: "-")
-  }
-  /// short : code - region
-  var shortIdentifier: String {
-    return [code, regionCode]
-      .compactMap { $0 }
-      .joined(separator: "-")
-  }
-  
-  func direction() -> W3WWritingDirection {
-    switch NSLocale.characterDirection(forLanguage: identifier) {
-      case .unknown:
-        return .leftToRight
-      case .leftToRight:
-        return .leftToRight
-      case .rightToLeft:
-        return .rightToLeft
-      case .topToBottom:
-        return .topToBottom
-      case .bottomToTop:
-        return .bottomToTop
-      @unknown default:
-        return .leftToRight
-    }
-  }
-}
-
 @available(watchOS 9, *)
 @available(iOS 16, *)
 extension Locale.Language : W3WRfcLanguageProtocol {
@@ -147,6 +142,9 @@ extension Locale.Language : W3WRfcLanguageProtocol {
 }
 
 extension W3WRfcLanguage {
+  /// this is returned correctly as long as OS recognizes the language code,
+  /// or else it will be the name in English (the same as name below)
+  /// this can happen as we have some sdk languages which are not supported by OS, ex: mn-Latn
   public var nativeName: String? {
     return LanguageUtils.getLanguageName(forLocale: identifier, inLocale: identifier)
   }
@@ -165,3 +163,4 @@ extension W3WRfcLanguage {
     return name(in: language.identifier)
   }
 }
+
