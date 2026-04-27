@@ -145,13 +145,25 @@ open class W3WRequest {
    - parameter params: dictionary of parameters to send on querystring
    - parameter completion: The completion handler
    */
-  @available(iOS 15.0, *)
-  public func call<T: Codable>(path: String, params: [String:String]? = nil, json: [String:Any]? = nil, method: W3WRequestMethod = .get) async throws -> T {
+  @available(iOS 13.0, watchOS 6.0, *)
+  public func call<T: Codable>(path: String, params: [String:String]? = nil, json: [String:Any]? = nil, postVars: [String:String] = [:], method: W3WRequestMethod = .get) async throws -> T {
     // generate the request
-    if let request = makeRequest(path: path, params: params, json: json, method: method) {
-      
+    if var request = makeRequest(path: path, params: params, json: json, method: method) {
+
+      // if postVars are provided, encode them as a URL-encoded form body
+      if !postVars.isEmpty {
+        let bodyString = postVars.map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? $0.value)" }.joined(separator: "&")
+        request.httpBody = bodyString.data(using: .utf8)
+        request.setValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
+      }
+
       // Call the actual endpoint
-      let (data, metadata) = try await URLSession.shared.data(for: request)
+      let (data, metadata): (Data, URLResponse)
+      if #available(watchOS 8.0, *) {
+        (data, metadata) = try await URLSession.shared.data(for: request)
+      } else {
+        (data, metadata) = try await dataFallback(for: request)
+      }
 
       // deal with the results
       if let md = metadata as? HTTPURLResponse {
@@ -159,19 +171,51 @@ open class W3WRequest {
         // return results if good
         if md.statusCode == 200 {
           return try W3WJson<T>.decode(json: data)
-          
-        // if the gttp code is anything but 200 return it in an error
+
+        // if the http code is anything but 200 return it in an error
         } else {
           throw W3WError.code(md.statusCode, "HTTP Error \(md.statusCode)")
         }
       }
     }
 
-    // if we made it here, sometning went wrong with the request
+    // if we made it here, something went wrong with the request
     throw W3WError.message("bad request")
   }
-  
-  
+
+
+  /**
+   Calls w3w URL with async, discarding the response body.
+   Throws on non-200 status codes.
+   - parameter path: The URL to call
+   - parameter params: dictionary of parameters to send on querystring
+   - parameter json: dictionary to send as JSON body
+   - parameter method: HTTP method
+   */
+  @available(iOS 13.0, watchOS 6.0, *)
+  public func call(path: String, params: [String:String]? = nil, json: [String:Any]? = nil, postVars: [String:String] = [:], method: W3WRequestMethod = .get) async throws {
+    let _: W3WEmptyResponse = try await call(path: path, params: params, json: json, postVars: postVars, method: method)
+  }
+
+
+  /// Fallback for platforms where `URLSession.data(for:)` is unavailable (e.g. watchOS < 8).
+  @available(iOS 13.0, watchOS 6.0, *)
+  private func dataFallback(for request: URLRequest) async throws -> (Data, URLResponse) {
+    return try await withCheckedThrowingContinuation { continuation in
+      let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error = error {
+          continuation.resume(throwing: error)
+        } else if let data = data, let response = response {
+          continuation.resume(returning: (data, response))
+        } else {
+          continuation.resume(throwing: W3WError.message("Unknown network error"))
+        }
+      }
+      task.resume()
+    }
+  }
+
+
   /**
    given a path and parameters, make a URLRequest object
    - parameter path: The URL to call
@@ -309,5 +353,14 @@ open class W3WRequest {
   public func publicMakeRequest(path: String, params: [String:String]? = nil, json: [String:Any]? = nil, method: W3WRequestMethod = .get) -> URLRequest? {
       return makeRequest(path: path, params: params, json: json, method: method)
   }
-  
+
 }
+
+
+/// A Codable type that decodes from any JSON (or empty body), used by the void call() overload
+private struct W3WEmptyResponse: Codable {
+  init() { }
+  init(from decoder: Decoder) throws { }
+  func encode(to encoder: Encoder) throws { }
+}
+
