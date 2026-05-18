@@ -140,6 +140,87 @@ open class W3WRequest {
   
   
   /**
+   Calls w3w URL with async
+   - parameter path: The URL to call
+   - parameter params: dictionary of parameters to send on querystring
+   - parameter completion: The completion handler
+   */
+  @available(iOS 13.0, watchOS 6.0, *)
+  public func call<T: Codable>(path: String, params: [String:String]? = nil, json: [String:Any]? = nil, postVars: [String:String] = [:], method: W3WRequestMethod = .get) async throws -> T {
+    // generate the request
+    if var request = makeRequest(path: path, params: params, json: json, method: method) {
+
+      // if postVars are provided, encode them as a URL-encoded form body
+      if !postVars.isEmpty {
+        request.httpBody = formEncode(postVars)
+        request.setValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
+      }
+
+      // DEBUG: dump full request
+      if path.contains("saved-location-lists") {
+        print("DEBUG request: \(request.httpMethod ?? "?") \(request.url?.absoluteString ?? "?")")
+        print("DEBUG headers: \(request.allHTTPHeaderFields ?? [:])")
+      }
+
+      // Call the actual endpoint
+      let (data, metadata): (Data, URLResponse)
+      if #available(watchOS 8.0, *) {
+        (data, metadata) = try await URLSession.shared.data(for: request)
+      } else {
+        (data, metadata) = try await dataFallback(for: request)
+      }
+
+      // deal with the results
+      if let md = metadata as? HTTPURLResponse {
+
+        // return results if good
+        guard (200..<300).contains(md.statusCode) else {
+          let body = String(data: data, encoding: .utf8) ?? ""
+          throw W3WError.code(md.statusCode, "HTTP Error \(md.statusCode): \(body)")
+        }
+
+        return try W3WJson<T>.decode(json: data)
+      }
+    }
+
+    // if we made it here, something went wrong with the request
+    throw W3WError.message("bad request")
+  }
+
+
+  /**
+   Calls w3w URL with async, discarding the response body.
+   Throws on non-200 status codes.
+   - parameter path: The URL to call
+   - parameter params: dictionary of parameters to send on querystring
+   - parameter json: dictionary to send as JSON body
+   - parameter method: HTTP method
+   */
+  @available(iOS 13.0, watchOS 6.0, *)
+  public func call(path: String, params: [String:String]? = nil, json: [String:Any]? = nil, postVars: [String:String] = [:], method: W3WRequestMethod = .get) async throws {
+    let _: W3WEmptyResponse = try await call(path: path, params: params, json: json, postVars: postVars, method: method)
+  }
+
+
+  /// Fallback for platforms where `URLSession.data(for:)` is unavailable (e.g. watchOS < 8).
+  @available(iOS 13.0, watchOS 6.0, *)
+  private func dataFallback(for request: URLRequest) async throws -> (Data, URLResponse) {
+    return try await withCheckedThrowingContinuation { continuation in
+      let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error = error {
+          continuation.resume(throwing: error)
+        } else if let data = data, let response = response {
+          continuation.resume(returning: (data, response))
+        } else {
+          continuation.resume(throwing: W3WError.message("Unknown network error"))
+        }
+      }
+      task.resume()
+    }
+  }
+
+
+  /**
    given a path and parameters, make a URLRequest object
    - parameter path: The URL to call
    - parameter params: disctionary of parameters to send on querystring
@@ -166,8 +247,6 @@ open class W3WRequest {
     
     // create the URL
     if let url = urlComponents.url {
-      // DEBUG
-      //print("calling: ", url)
       
       // create the request
       var request = URLRequest(url: url)
@@ -193,6 +272,21 @@ open class W3WRequest {
   }
   
   
+  /// Encode a dictionary as an application/x-www-form-urlencoded body (RFC 3986 unreserved characters only)
+  func formEncode(_ params: [String: String]) -> Data {
+    var allowed = CharacterSet.alphanumerics
+    allowed.insert(charactersIn: "-._~")
+
+    let encoded = params.map { key, value in
+      let k = key.addingPercentEncoding(withAllowedCharacters: allowed) ?? key
+      let v = value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
+      return "\(k)=\(v)"
+    }.joined(separator: "&")
+
+    return encoded.data(using: .utf8) ?? Data()
+  }
+
+
   /**
    Calls w3w URL
    - parameter data: the returned data from the API
@@ -276,5 +370,14 @@ open class W3WRequest {
   public func publicMakeRequest(path: String, params: [String:String]? = nil, json: [String:Any]? = nil, method: W3WRequestMethod = .get) -> URLRequest? {
       return makeRequest(path: path, params: params, json: json, method: method)
   }
-  
+
 }
+
+
+/// A Codable type that decodes from any JSON (or empty body), used by the void call() overload
+private struct W3WEmptyResponse: Codable {
+  init() { }
+  init(from decoder: Decoder) throws { }
+  func encode(to encoder: Encoder) throws { }
+}
+
