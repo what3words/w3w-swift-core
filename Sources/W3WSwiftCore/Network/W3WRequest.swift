@@ -152,9 +152,14 @@ open class W3WRequest {
 
       // if postVars are provided, encode them as a URL-encoded form body
       if !postVars.isEmpty {
-        let bodyString = postVars.map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? $0.value)" }.joined(separator: "&")
-        request.httpBody = bodyString.data(using: .utf8)
+        request.httpBody = formEncode(postVars)
         request.setValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
+      }
+
+      // DEBUG: dump full request
+      if path.contains("saved-location-lists") {
+        print("DEBUG request: \(request.httpMethod ?? "?") \(request.url?.absoluteString ?? "?")")
+        print("DEBUG headers: \(request.allHTTPHeaderFields ?? [:])")
       }
 
       // Call the actual endpoint
@@ -169,13 +174,12 @@ open class W3WRequest {
       if let md = metadata as? HTTPURLResponse {
 
         // return results if good
-        if md.statusCode == 200 {
-          return try W3WJson<T>.decode(json: data)
-
-        // if the http code is anything but 200 return it in an error
-        } else {
-          throw W3WError.code(md.statusCode, "HTTP Error \(md.statusCode)")
+        guard (200..<300).contains(md.statusCode) else {
+          let body = String(data: data, encoding: .utf8) ?? ""
+          throw W3WError.code(md.statusCode, "HTTP Error \(md.statusCode): \(body)")
         }
+
+        return try W3WJson<T>.decode(json: data)
       }
     }
 
@@ -243,8 +247,6 @@ open class W3WRequest {
     
     // create the URL
     if let url = urlComponents.url {
-      // DEBUG
-      //print("calling: ", url)
       
       // create the request
       var request = URLRequest(url: url)
@@ -270,6 +272,21 @@ open class W3WRequest {
   }
   
   
+  /// Encode a dictionary as an application/x-www-form-urlencoded body (RFC 3986 unreserved characters only)
+  func formEncode(_ params: [String: String]) -> Data {
+    var allowed = CharacterSet.alphanumerics
+    allowed.insert(charactersIn: "-._~")
+
+    let encoded = params.map { key, value in
+      let k = key.addingPercentEncoding(withAllowedCharacters: allowed) ?? key
+      let v = value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
+      return "\(k)=\(v)"
+    }.joined(separator: "&")
+
+    return encoded.data(using: .utf8) ?? Data()
+  }
+
+
   /**
    Calls w3w URL
    - parameter data: the returned data from the API
