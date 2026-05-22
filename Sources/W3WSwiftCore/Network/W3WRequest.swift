@@ -162,13 +162,7 @@ open class W3WRequest {
         print("DEBUG headers: \(request.allHTTPHeaderFields ?? [:])")
       }
 
-      // Call the actual endpoint
-      let (data, metadata): (Data, URLResponse)
-      if #available(watchOS 8.0, *) {
-        (data, metadata) = try await URLSession.shared.data(for: request)
-      } else {
-        (data, metadata) = try await dataFallback(for: request)
-      }
+      let (data, metadata) = try await URLSession.shared.data(for: request)
 
       // deal with the results
       if let md = metadata as? HTTPURLResponse {
