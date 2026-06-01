@@ -20,4 +20,9 @@ public class W3WJson<CodableType: Codable> {
     return nil
   }
   
+  
+  static public func decode(json: Data) throws -> CodableType {
+    return try JSONDecoder().decode(CodableType.self, from: json)
+  }
+  
 }
