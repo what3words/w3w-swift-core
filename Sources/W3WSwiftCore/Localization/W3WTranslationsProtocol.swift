@@ -13,17 +13,30 @@ public protocol W3WTranslationsProtocol: W3WAvailableLanguageProtocol {
   ///     - id: a translation id
   func get(id: String) -> String
   
-  /// given a translation id return the translation for the given device locale
+  /// given a translation id return the translation for the given device locale rfc
+  /// - Parameters:
+  ///     - id: a translation id
+  func getRfc(id: String) -> String
+  
+  /// given a translation id return the translation for the given device locale with rfcLanguage
   /// - Parameters:
   ///     - id: a translation id
   ///     - language: the language to translate into
-  func get(id: String, language: W3WLanguage?) -> String
+  func getRfc(id: String, language: (any W3WRfcLanguageProtocol)?) -> String
 }
 
 public extension W3WTranslationsProtocol {
   
   func get(id: String) -> String {
-    return get(id: id, language: nil)
+    return getRfc(id: id)
+  }
+  
+  func getRfc(id: String, language: (any W3WRfcLanguageProtocol)?) -> String {
+    return getRfc(id: id)
+  }
+  
+  func getRfc(id: String) -> String {
+    return getRfc(id: id, language: nil)
   }
 }
 
