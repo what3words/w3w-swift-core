@@ -39,3 +39,11 @@ public extension W3WEventSubscriberProtocol {
   }
   
 }
+
+
+@attached(member, names: named(subscriptions))
+@attached(extension, conformances: W3WEventSubscriberProtocol)
+public macro EventSubscriber() = #externalMacro(
+  module: "W3WSwiftCoreMacros",
+  type: "EventSubscriberMacro"
+)
