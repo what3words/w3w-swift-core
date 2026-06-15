@@ -88,3 +88,23 @@ extension Sequence where Element == String? {
   }
 }
 
+public extension W3WRfcLanguageProtocol {
+  /// True if languages are compatible: same language code, and script/region
+  /// only need to match when both sides specify them.
+  /// e.g. "ja-Jpan-JP" ≡ "ja-JP" ≡ "ja", "ars-Arab-SA" ≡ "ars-SA".
+  func isEquivalent(to other: any W3WRfcLanguageProtocol) -> Bool {
+    guard code != nil, code == other.code else { return false }
+    if let s1 = scriptCode, let s2 = other.scriptCode, s1 != s2 { return false }
+    if let r1 = regionCode, let r2 = other.regionCode, r1 != r2 { return false }
+    return true
+  }
+  
+  func isTheSameLanguage(to other: any W3WRfcLanguageProtocol) -> Bool {
+    guard code != nil, code == other.code else { return false }
+    if scriptCode == other.scriptCode {
+      return true
+    } else {
+      return false
+    }
+  }
+}

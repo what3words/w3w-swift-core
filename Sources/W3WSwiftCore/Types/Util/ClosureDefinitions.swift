@@ -23,3 +23,6 @@ public typealias W3WLanguagesResponse                   = ([W3WLanguage]?, W3WEr
 
 public typealias W3WErrorResponse                       = (W3WError) -> ()
 
+/// MARK: - RfcLanguage
+public typealias W3WRfcLanguagesResponse = ([any W3WRfcLanguageProtocol]?, W3WError?) -> ()
+
