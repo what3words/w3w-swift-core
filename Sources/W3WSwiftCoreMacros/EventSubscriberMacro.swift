@@ -16,10 +16,10 @@ public struct EventSubscriberMacro: MemberMacro, ExtensionMacro {
     conformingTo protocols: [TypeSyntax],
     in context: some MacroExpansionContext
   ) throws -> [DeclSyntax] {
+    let isPublic = declaration.modifiers.contains { $0.name.tokenKind == .keyword(.public) }
+    let prefix = isPublic ? "public " : ""
     return [
-    """
-    var subscriptions = W3WEventsSubscriptions()
-    """
+      DeclSyntax(stringLiteral: "\(prefix)var subscriptions = W3WEventsSubscriptions()")
     ]
   }
   
