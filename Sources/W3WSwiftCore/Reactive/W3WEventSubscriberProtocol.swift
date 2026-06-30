@@ -66,30 +66,3 @@ public extension W3WEventSubscriberProtocol {
     return String(describing: type)
   }
 }
-
-/// Conforms a class to ``W3WEventSubscriberProtocol`` without boilerplate.
-///
-/// Attach this to a class to synthesise the `subscriptions` storage and the
-/// protocol conformance, giving the type access to the `subscribe(to:handler:)`
-/// and `subscribe(to:id:handler:)` helpers.
-///
-/// ```swift
-/// @EventSubscriber
-/// class MyViewModel {
-///   func start(_ publisher: some Publisher<Event, Never>) {
-///     subscribe(to: publisher, id: "events") { event in
-///       // handle event
-///     }
-///   }
-/// }
-/// ```
-///
-/// The macro expands to:
-/// - a `subscriptions` property (the backing ``W3WEventsSubscriptions`` set), and
-/// - an extension declaring conformance to ``W3WEventSubscriberProtocol``.
-@attached(member, names: named(subscriptions))
-@attached(extension, conformances: W3WEventSubscriberProtocol)
-public macro EventSubscriber() = #externalMacro(
-  module: "W3WSwiftCoreMacros",
-  type: "EventSubscriberMacro"
-)
