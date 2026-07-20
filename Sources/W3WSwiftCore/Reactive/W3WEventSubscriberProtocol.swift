@@ -79,10 +79,9 @@ public extension W3WEventSubscriberProtocol {
   func type(for type: Any.Type) -> String {
     return String(describing: type)
   }
-}
-
-extension W3WEventSubscriberProtocol {
-  func store<EventType: Publisher, ID: Hashable>(
+  
+  // MARK: - Helpers
+  private func store<EventType: Publisher, ID: Hashable>(
     to: EventType?,
     id: ID,
     handler: @escaping (EventType.Output) -> ()
