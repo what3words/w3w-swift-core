@@ -26,6 +26,21 @@ public struct W3WAPIError: Decodable, Error {
     case title = "message"
     case code = "messageCode"
   }
+  
+  public init(title: String, code: Int) {
+    self.title = title
+    self.code = code
+  }
+  
+  /// Decodes an error payload, tolerating a missing `message_code`.
+  ///
+  /// Some endpoints return an error message without a code, so `code`
+  /// falls back to `0` when the field is absent.
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    title = try container.decode(String.self, forKey: .title)
+    code = try container.decodeIfPresent(Int.self, forKey: .code) ?? 0
+  }
 }
 
 extension W3WAPIError {

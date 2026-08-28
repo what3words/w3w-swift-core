@@ -22,7 +22,7 @@ import Foundation
 /// let square = try await api.request(path: "/convert-to-3wa", for: W3WSquare.self)
 /// ```
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-public struct W3WAPI {
+public struct W3WAPI: Sendable {
   /// The session used to perform network requests. Defaults to `URLSession.shared`.
   public var urlSession = URLSession.shared
 
@@ -264,7 +264,9 @@ private extension W3WAPI {
         // Broadcast `onRequireSessionReset` so observers can clear local
         // session state and re-authenticate; the error is still thrown to the caller.
         if error.code == 702 {
-          NotificationCenter.default.post(name: .onRequireSessionReset, object: nil)
+          DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .onRequireSessionReset, object: nil)
+          }
         }
         throw error
       }
@@ -275,16 +277,6 @@ private extension W3WAPI {
     }
     return data
   }
-}
-
-public extension Notification.Name {
-  /// Posted when the server responds with error code 702, indicating the
-  /// current session is no longer valid and must be reset.
-  ///
-  /// ``W3WAPI`` posts this on `NotificationCenter.default` with no `object`
-  /// or `userInfo`, before throwing the ``W3WAPIError`` to the caller.
-  /// Observe it to clear cached session state and trigger re-authentication.
-  static let onRequireSessionReset = Notification.Name("onRequireSessionReset")
 }
 
 private extension JSONDecoder {
