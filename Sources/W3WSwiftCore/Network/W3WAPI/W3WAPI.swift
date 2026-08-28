@@ -300,19 +300,26 @@ private extension W3WAPI {
   func multipartBody(boundary: String, files: [W3WAPIFilePart], body: [String: Any]?) -> Data {
     var data = Data()
     for file in files {
-      data.append(Data("--\(boundary)\r\n".utf8))
-      data.append(Data("Content-Disposition: form-data; name=\"\(file.name.multipartSafe)\"; filename=\"\(file.fileName.multipartSafe)\"\r\n".utf8))
-      data.append(Data("Content-Type: \(file.contentType)\r\n\r\n".utf8))
+      data.append("--\(boundary)\r\n")
+      data.append("Content-Disposition: form-data; name=\"\(file.name.multipartSafe)\"; filename=\"\(file.fileName.multipartSafe)\"\r\n")
+      data.append("Content-Type: \(file.contentType)\r\n\r\n")
       data.append(file.data)
-      data.append(Data("\r\n".utf8))
+      data.append("\r\n")
     }
     for (name, value) in body ?? [:] {
-      data.append(Data("--\(boundary)\r\n".utf8))
-      data.append(Data("Content-Disposition: form-data; name=\"\(name.multipartSafe)\"\r\n\r\n".utf8))
-      data.append(Data("\(value)\r\n".utf8))
+      data.append("--\(boundary)\r\n")
+      data.append("Content-Disposition: form-data; name=\"\(name.multipartSafe)\"\r\n\r\n")
+      data.append("\(value)\r\n")
     }
-    data.append(Data("--\(boundary)--\r\n".utf8))
+    data.append("--\(boundary)--\r\n")
     return data
+  }
+}
+
+private extension Data {
+  /// Appends the UTF-8 bytes of the given string.
+  mutating func append(_ string: String) {
+    append(Data(string.utf8))
   }
 }
 
