@@ -14,7 +14,7 @@ import Foundation
 /// to ``baseURL``, and every request automatically includes the shared
 /// ``headers`` and ``params`` configured on the instance.
 ///
-/// Errors are normalised into ``W3WMessageError`` so callers only need to
+/// Errors are normalised into ``W3WAPIError`` so callers only need to
 /// handle a single error type:
 ///
 /// ```swift
@@ -37,9 +37,15 @@ public struct W3WAPI {
   public var params = [String: String]()
 
   /// The range of HTTP status codes treated as success. Defaults to `200..<300`.
-  /// Responses outside this range are decoded as ``W3WMessageError`` and thrown.
+  /// Responses outside this range are decoded as ``W3WAPIError`` and thrown.
   public var acceptingCodes = 200..<300
 
+  /// The cache policy applied to every request built by this client.
+  /// Defaults to `.useProtocolCachePolicy`, which honours the server's
+  /// cache headers. Set to `.reloadIgnoringLocalCacheData` to always
+  /// fetch fresh data.
+  public var cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy
+  
   /// The decoder used for response bodies. Converts snake_case keys to camelCase.
   public let decoder = JSONDecoder.default
 
@@ -67,7 +73,7 @@ public struct W3WAPI {
   ///   - encoding: How the body is encoded. Defaults to ``W3WAPIEncoding/json``.
   ///   - type: The `Decodable` type to decode the response into.
   /// - Returns: The decoded response value.
-  /// - Throws: A ``W3WMessageError`` describing the server error, or wrapping
+  /// - Throws: A ``W3WAPIError`` describing the server error, or wrapping
   ///   any underlying networking or decoding failure.
   public func request<T: Decodable>(
     _ method: W3WRequestMethod = .get,
@@ -76,7 +82,7 @@ public struct W3WAPI {
     body: [String: Any]? = nil,
     encoding: W3WAPIEncoding = .json,
     for type: T.Type
-  ) async throws(W3WMessageError) -> T {
+  ) async throws(W3WAPIError) -> T {
     do {
       let request: URLRequest = try request(method, path: path, params: params ?? [:], body: body, encoding: encoding)
       let data = try await data(for: request)
@@ -84,7 +90,7 @@ public struct W3WAPI {
     } catch {
       onError?(error)
       switch error {
-      case let messageError as W3WMessageError: throw messageError
+      case let apiError as W3WAPIError: throw apiError
       default: throw .init(error)
       }
     }
@@ -101,7 +107,7 @@ public struct W3WAPI {
   ///   - params: Query parameters for this request, merged over the shared ``params``.
   ///   - body: The request body, serialised according to `encoding`. Ignored for GET requests.
   ///   - encoding: How the body is encoded. Defaults to ``W3WAPIEncoding/json``.
-  /// - Throws: A ``W3WMessageError`` describing the server error, or wrapping
+  /// - Throws: A ``W3WAPIError`` describing the server error, or wrapping
   ///   any underlying networking failure.
   public func request(
     _ method: W3WRequestMethod = .post,
@@ -109,14 +115,14 @@ public struct W3WAPI {
     params: [String: String]? = nil,
     body: [String: Any]? = nil,
     encoding: W3WAPIEncoding = .json,
-  ) async throws(W3WMessageError) {
+  ) async throws(W3WAPIError) {
     do {
       let request: URLRequest = try request(method, path: path, params: params ?? [:], body: body, encoding: encoding)
       try await data(for: request)
     } catch {
       onError?(error)
       switch error {
-      case let messageError as W3WMessageError: throw messageError
+      case let apiError as W3WAPIError: throw apiError
       default: throw .init(error)
       }
     }
@@ -135,12 +141,12 @@ extension W3WAPI {
   ///   - params: Query parameters for this request, merged over the shared ``params``.
   ///   - type: The `Decodable` type to decode the response into.
   /// - Returns: The decoded response value.
-  /// - Throws: A ``W3WMessageError`` on failure.
-  func get<T: Decodable>(
+  /// - Throws: A ``W3WAPIError`` on failure.
+  public func get<T: Decodable>(
     _ path: String,
     params: [String: String]? = nil,
     for type: T.Type
-  ) async throws(W3WMessageError) -> T {
+  ) async throws(W3WAPIError) -> T {
     try await request(.get, path: path, params: params, for: type)
   }
 
@@ -155,14 +161,14 @@ extension W3WAPI {
   ///   - encoding: How the body is encoded. Defaults to ``W3WAPIEncoding/json``.
   ///   - type: The `Decodable` type to decode the response into.
   /// - Returns: The decoded response value.
-  /// - Throws: A ``W3WMessageError`` on failure.
-  func post<T: Decodable>(
+  /// - Throws: A ``W3WAPIError`` on failure.
+  public func post<T: Decodable>(
     _ path: String,
     params: [String: String]? = nil,
     body: [String: Any]? = nil,
     encoding: W3WAPIEncoding = .json,
     for type: T.Type
-  ) async throws(W3WMessageError) -> T {
+  ) async throws(W3WAPIError) -> T {
     try await request(.post, path: path, params: params, body: body, encoding: encoding, for: type)
   }
 
@@ -175,13 +181,13 @@ extension W3WAPI {
   ///   - params: Query parameters for this request, merged over the shared ``params``.
   ///   - body: The request body, serialised according to `encoding`.
   ///   - encoding: How the body is encoded. Defaults to ``W3WAPIEncoding/json``.
-  /// - Throws: A ``W3WMessageError`` on failure.
-  func post(
+  /// - Throws: A ``W3WAPIError`` on failure.
+  public func post(
     _ path: String,
     params: [String: String]? = nil,
     body: [String: Any]? = nil,
     encoding: W3WAPIEncoding = .json,
-  ) async throws(W3WMessageError) {
+  ) async throws(W3WAPIError) {
     try await request(.post, path: path, params: params, body: body, encoding: encoding)
   }
 }
@@ -196,15 +202,15 @@ private extension W3WAPI {
   func request(_ method: W3WRequestMethod, path: String, params: [String: String], body: [String: Any]?, encoding: W3WAPIEncoding) throws -> URLRequest {
     let url = baseURL.appending(path: path)
     guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-      throw W3WAPIError.badURL(url)
+      throw W3WURLError.badURL(url)
     }
     
     let queryItems = self.params.merging(params) { $1 }.map(URLQueryItem.init)
     if !queryItems.isEmpty {
       components.queryItems = queryItems
     }
-    guard var request = components.url.map({ URLRequest(url: $0) }) else {
-      throw W3WAPIError.badComponents(components)
+    guard var request = components.url.map({ URLRequest(url: $0, cachePolicy: cachePolicy) }) else {
+      throw W3WURLError.badComponents(components)
     }
     request.httpMethod = method.rawValue
     for (name, value) in headers {
@@ -216,6 +222,13 @@ private extension W3WAPI {
       case .json:
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+      case .form:
+        var components = URLComponents()
+        components.queryItems = body.map { URLQueryItem(name: $0.key, value: "\($0.value)") }
+        let query = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+        request.httpBody = query?.data(using: .utf8)
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
       }
     }
     return request
@@ -223,79 +236,45 @@ private extension W3WAPI {
   
   /// Executes the request and validates the HTTP response.
   ///
-  /// Status codes outside ``acceptingCodes`` are turned into a ``W3WMessageError``,
+  /// Status codes outside ``acceptingCodes`` are turned into a ``W3WAPIError``,
   /// decoded from the response body when possible, otherwise built from the
   /// status code's localised description.
   @discardableResult
   func data(for request: URLRequest) async throws -> Data {
     let (data, response) = try await urlSession.data(for: request)
     guard let response = response as? HTTPURLResponse else {
-      throw W3WAPIError.badResponse(response)
+      throw W3WURLError.badResponse(response)
     }
     guard acceptingCodes.contains(response.statusCode) else {
-      if let error = try? decoder.decode(W3WMessageError.self, from: data) {
+      if let error = try? decoder.decode(W3WAPIError.self, from: data) {
+        // Error code 702 means the server has invalidated the current session.
+        // Broadcast `onRequireSessionReset` so observers can clear local
+        // session state and re-authenticate; the error is still thrown to the caller.
+        if error.code == 702 {
+          NotificationCenter.default.post(name: .onRequireSessionReset, object: nil)
+        }
         throw error
       }
-      throw W3WMessageError(
-        message: HTTPURLResponse.localizedString(forStatusCode: response.statusCode),
-        messageCode: response.statusCode
+      throw W3WAPIError(
+        title: HTTPURLResponse.localizedString(forStatusCode: response.statusCode),
+        code: response.statusCode
       )
     }
     return data
   }
 }
 
-/// The encoding used to serialise a request body.
-public enum W3WAPIEncoding {
-  /// Serialise the body as JSON with a `Content-Type: application/json` header.
-  case json
-}
-
-/// An error returned by a what3words service, or wrapping a local failure.
-///
-/// This is the single error type thrown by all ``W3WAPI`` request methods.
-/// When the server responds with an error payload it is decoded directly into
-/// this type; otherwise the underlying error is wrapped with a code of `0`.
-public struct W3WMessageError: Decodable, Error {
-  /// A human-readable description of the error.
-  let message: String
-
-  /// The error code — the server's message code, the HTTP status code,
-  /// or `0` when wrapping a local error.
-  let messageCode: Int
-}
-
-extension W3WMessageError {
-  /// Wraps an arbitrary error, using its localised description as the message.
+public extension Notification.Name {
+  /// Posted when the server responds with error code 702, indicating the
+  /// current session is no longer valid and must be reset.
   ///
-  /// - Parameters:
-  ///   - error: The underlying error to wrap.
-  ///   - code: The message code to report. Defaults to `0`.
-  init(_ error: Error, code: Int = 0) {
-    self.init(message: error.localizedDescription, messageCode: code)
-  }
+  /// ``W3WAPI`` posts this on `NotificationCenter.default` with no `object`
+  /// or `userInfo`, before throwing the ``W3WAPIError`` to the caller.
+  /// Observe it to clear cached session state and trigger re-authentication.
+  static let onRequireSessionReset = Notification.Name("onRequireSessionReset")
 }
 
-/// Local failures that can occur while constructing or validating a request,
-/// before or after it reaches the network.
-enum W3WAPIError: Error, LocalizedError {
-  /// The URL built from the base URL and path could not be parsed into components.
-  case badURL(URL)
-  /// The URL components could not be recombined into a valid URL.
-  case badComponents(URLComponents)
-  /// The response was not an HTTP response.
-  case badResponse(URLResponse)
-
-  var errorDescription: String? {
-    switch self {
-    case let .badURL(url): return "Bad URL: \(url)"
-    case let .badComponents(components): return "Bad URLComponents: \(components)"
-    case let .badResponse(response): return "Bad URLResponse: \(response)"
-    }
-  }
-}
-
-extension JSONDecoder {
+private extension JSONDecoder {
   /// A decoder configured for what3words API responses,
   /// converting snake_case keys to camelCase.
   static var `default`: JSONDecoder {
