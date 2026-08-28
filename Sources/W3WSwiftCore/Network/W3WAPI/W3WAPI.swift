@@ -53,6 +53,17 @@ public struct W3WAPI {
   /// before the error is thrown. Useful for centralised logging or analytics.
   public var onError: (@Sendable (Error) -> Void)?
 
+  /// An optional hook invoked with the fully-built `URLRequest` just before
+  /// it is sent. Useful for centralised logging, analytics or debugging.
+  /// Observation only — mutating the request here has no effect.
+  public var onRequest: (@Sendable (URLRequest) -> Void)?
+
+  /// An optional hook invoked with the raw response body and `HTTPURLResponse`
+  /// as soon as a response is received, before status-code validation and
+  /// decoding. Called for both success and error status codes, so it sees
+  /// every round trip. Useful for centralised logging, analytics or debugging.
+  public var onResponse: (@Sendable (Data, HTTPURLResponse) -> Void)?
+
   /// Creates an API client rooted at the given base URL.
   ///
   /// - Parameters:
@@ -241,10 +252,12 @@ private extension W3WAPI {
   /// status code's localised description.
   @discardableResult
   func data(for request: URLRequest) async throws -> Data {
+    onRequest?(request)
     let (data, response) = try await urlSession.data(for: request)
     guard let response = response as? HTTPURLResponse else {
       throw W3WURLError.badResponse(response)
     }
+    onResponse?(data, response)
     guard acceptingCodes.contains(response.statusCode) else {
       if let error = try? decoder.decode(W3WAPIError.self, from: data) {
         // Error code 702 means the server has invalidated the current session.
