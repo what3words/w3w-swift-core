@@ -125,7 +125,7 @@ public struct W3WAPI: Sendable {
     path: String,
     params: [String: String]? = nil,
     body: [String: Any]? = nil,
-    encoding: W3WAPIEncoding = .json,
+    encoding: W3WAPIEncoding = .json
   ) async throws(W3WAPIError) {
     do {
       let request: URLRequest = try request(method, path: path, params: params ?? [:], body: body, encoding: encoding)
@@ -197,7 +197,7 @@ extension W3WAPI {
     _ path: String,
     params: [String: String]? = nil,
     body: [String: Any]? = nil,
-    encoding: W3WAPIEncoding = .json,
+    encoding: W3WAPIEncoding = .json
   ) async throws(W3WAPIError) {
     try await request(.post, path: path, params: params, body: body, encoding: encoding)
   }
@@ -265,7 +265,7 @@ private extension W3WAPI {
         // session state and re-authenticate; the error is still thrown to the caller.
         if error.code == 702 {
           DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .onRequireSessionReset, object: nil)
+            NotificationCenter.default.post(name: .w3wOnRequireSessionReset, object: nil)
           }
         }
         throw error

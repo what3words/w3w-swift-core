@@ -14,5 +14,5 @@ public extension Notification.Name {
   /// ``W3WAPI`` posts this on `NotificationCenter.default` with no `object`
   /// or `userInfo`, before throwing the ``W3WAPIError`` to the caller.
   /// Observe it to clear cached session state and trigger re-authentication.
-  static let onRequireSessionReset = Notification.Name("onRequireSessionReset")
+  static let w3wOnRequireSessionReset = Notification.Name("w3w.onRequireSessionReset")
 }
