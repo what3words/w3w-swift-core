@@ -228,19 +228,24 @@ private extension W3WAPI {
       request.setValue(value, forHTTPHeaderField: name)
     }
     
-    if method != .get, let body {
-      switch encoding {
-      case .json:
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-      case .form:
-        var components = URLComponents()
-        components.queryItems = body.map { URLQueryItem(name: $0.key, value: "\($0.value)") }
-        let query = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
-        request.httpBody = query?.data(using: .utf8)
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-      }
+    guard method != .get else { return request }
+    
+    switch (encoding, body) {
+    case (.json, .some(let body)):
+      request.httpBody = try JSONSerialization.data(withJSONObject: body)
+      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      
+    case (.form, .some(let body)):
+      request.httpBody = formBody(from: body)
+      request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+
+    // Skipped when there would be zero parts — RFC 2046 requires at least one.
+    case (.multipart(let files), let body) where !files.isEmpty || body?.isEmpty == false:
+      let boundary = "Boundary-\(UUID().uuidString)"
+      request.httpBody = multipartBody(boundary: boundary, files: files, body: body)
+      request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+      
+    default: break // No body to send
     }
     return request
   }
@@ -276,6 +281,46 @@ private extension W3WAPI {
       )
     }
     return data
+  }
+  
+  /// Serialises the body as percent-encoded `key=value` pairs for a
+  /// `application/x-www-form-urlencoded` request.
+  func formBody(from body: [String: Any]) -> Data? {
+    var components = URLComponents()
+    components.queryItems = body.map { URLQueryItem(name: $0.key, value: "\($0.value)") }
+    let query = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+    return query?.data(using: .utf8)
+  }
+
+  /// Serialises files and text fields into a `multipart/form-data` body.
+  ///
+  /// Each file becomes its own part, and each entry of `body` becomes a text
+  /// field. Callers must ensure the result has at least one part, as required
+  /// by RFC 2046.
+  func multipartBody(boundary: String, files: [W3WAPIFilePart], body: [String: Any]?) -> Data {
+    var data = Data()
+    for file in files {
+      data.append(Data("--\(boundary)\r\n".utf8))
+      data.append(Data("Content-Disposition: form-data; name=\"\(file.name.multipartSafe)\"; filename=\"\(file.fileName.multipartSafe)\"\r\n".utf8))
+      data.append(Data("Content-Type: \(file.contentType)\r\n\r\n".utf8))
+      data.append(file.data)
+      data.append(Data("\r\n".utf8))
+    }
+    for (name, value) in body ?? [:] {
+      data.append(Data("--\(boundary)\r\n".utf8))
+      data.append(Data("Content-Disposition: form-data; name=\"\(name.multipartSafe)\"\r\n\r\n".utf8))
+      data.append(Data("\(value)\r\n".utf8))
+    }
+    data.append(Data("--\(boundary)--\r\n".utf8))
+    return data
+  }
+}
+
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+private extension String {
+  /// Strips characters that would break a multipart `Content-Disposition` header.
+  var multipartSafe: String {
+    replacing(#/["\r\n]/#, with: "")
   }
 }
 
