@@ -1,10 +1,10 @@
 # W3WAPI
 
-A lightweight, `Sendable` HTTP client for what3words REST services, built on `URLSession` with typed `async` methods, a single normalised error type (``W3WAPIError``), and Combine `Future` counterparts for reactive call sites.
+A lightweight, `Sendable` HTTP client for what3words REST services, built on `URLSession` with typed `async` methods, a single normalised error type (``W3WError``), and Combine `Future` counterparts for reactive call sites.
 
 ## Creating a client
 
-``W3WAPI/init(baseURL:headers:)`` takes the base URL and, optionally, headers that are sent with every request. Authentication headers are **passed in from the call site** — `W3WAPI` does not know how to authenticate, it just forwards what you give it:
+``W3WAPI/init(baseURL:headers:params:)`` takes the base URL and, optionally, headers and query params that are sent with every request. Authentication headers are **passed in from the call site** — `W3WAPI` does not know how to authenticate, it just forwards what you give it:
 
 ```swift
 var api = W3WAPI(
@@ -40,7 +40,7 @@ struct SavedLocationService {
     }
 
     extension SavedLocationService {
-      func lists() async throws(W3WAPIError) -> W3WLists {
+      func lists() async throws(W3WError) -> W3WLists {
         try await api.get("/accounts/v1/lists", for: W3WLists.self)
       }
     }
@@ -50,7 +50,7 @@ struct SavedLocationService {
   @Tab("POST") {
     ```swift
     extension SavedLocationService {
-      func createList(label: String) async throws(W3WAPIError) -> W3WList {
+      func createList(label: String) async throws(W3WError) -> W3WList {
         try await api.post(
           "/accounts/v1/lists",
           body: ["label": label],
@@ -59,7 +59,7 @@ struct SavedLocationService {
       }
 
       // When the response body doesn't matter, skip the `for:` type.
-      func deleteList(id: String) async throws(W3WAPIError) {
+      func deleteList(id: String) async throws(W3WError) {
         try await api.post("/accounts/v1/lists/\(id)/delete")
       }
     }
@@ -84,26 +84,7 @@ Responses are decoded with a shared ``W3WAPI/decoder`` whose `keyDecodingStrateg
 
 > Note: The decoder currently has no `dateDecodingStrategy`. If an endpoint starts returning dates that need parsing (ISO 8601, epoch…), add the appropriate strategy to `JSONDecoder.default` in `W3WAPI.swift`.
 
-## Hooks for debugging and analytics
-
-Three optional observation hooks cover the full round trip — handy for centralised logging, analytics, or a network console:
-
-```swift
-api.onRequest = { request in
-  print("➡️ \(request.httpMethod ?? "") \(request.url?.absoluteString ?? "")")
-}
-api.onResponse = { data, response in
-  // Called for BOTH success and error status codes, before validation/decoding.
-  print("⬅️ \(response.statusCode): \(String(decoding: data, as: UTF8.self))")
-}
-api.onError = { error in
-  analytics.track(error) // Called just before the error is thrown.
-}
-```
-
-- ``W3WAPI/onRequest`` — the fully-built `URLRequest`, just before sending. Observation only; mutating it has no effect.
-- ``W3WAPI/onResponse`` — raw body + `HTTPURLResponse` for every round trip, before status-code validation.
-- ``W3WAPI/onError`` — the underlying error whenever a request fails, before it is thrown.
+> Important: Error payloads rely on that same strategy. ``W3WError``'s `Decodable` conformance reads `messageCode`, so decoding an error body with a plain `JSONDecoder` silently drops `message_code` and yields a codeless ``W3WError/message(_:)``. Decode error payloads through ``W3WAPI/decoder`` (or any decoder with `.convertFromSnakeCase`).
 
 ## Body encodings
 
@@ -137,31 +118,50 @@ Fall back to `request` directly only when you need a less common HTTP method.
 If the surrounding code is Combine-based, use the `Future`-returning counterparts in `W3WAPI+Future.swift` instead of bridging async/await yourself:
 
 ```swift
-api.get("/accounts/v1/lists", for: W3WLists.self)   // Future<W3WLists, W3WAPIError>
+api.get("/accounts/v1/lists", for: W3WLists.self)   // Future<W3WLists, W3WError>
   .sink(receiveCompletion: { ... }, receiveValue: { ... })
 ```
 
-Each future emits the decoded value once, or fails with a ``W3WAPIError``.
+Each future emits the decoded value once, or fails with a ``W3WError``.
 
 ## Working with errors
 
-All request methods use typed throws — the **only** error type a call site ever sees is ``W3WAPIError``, so there is no casting dance:
+All request methods use typed throws — the **only** error type a call site ever sees is ``W3WError``, so there is no casting dance:
 
 ```swift
-do throws(W3WAPIError) {
+do throws(W3WError) {
   let lists = try await api.lists()
 } catch {
-  // `error` is already a W3WAPIError.
-  switch error.code {
-  case 401: promptReauthentication()
-  default: showAlert(error.title)
+  // `error` is already a W3WError — switch on the case that interests you.
+  switch error {
+  case .code(401, _):                  promptReauthentication()
+  case .code(let code, let message):   log("request failed \(code): \(message)")
+  case .message(let message):          showAlert(message)
+  case .other(let underlying):         showAlert(underlying?.localizedDescription ?? "Network error")
+  case .unknown:                       showAlert("Something went wrong")
   }
 }
 ```
 
-- Server error payloads (`message` / `message_code`) decode straight into `title` / `code`.
-- Non-2xx responses without a decodable payload become a `W3WAPIError` built from the HTTP status code.
-- Local failures (networking, decoding, bad URL) are wrapped with `code == 0`.
+When only the code matters, ``W3WError/code-swift.property`` is the shorthand — it is `nil` for every case except ``W3WError/code(_:_:)``:
+
+```swift
+if error.code == 702 { resetSession() }
+```
+
+How each failure maps onto the enum:
+
+| Failure | Case | `error.code` |
+|---|---|---|
+| Error payload with `message` + `message_code` | `.code(messageCode, message)` | the server's message code |
+| Error payload with `message` only | `.message(message)` | `nil` |
+| Non-2xx response with no decodable payload | `.code(statusCode, localizedStatusDescription)` | the HTTP status code |
+| Local failure (networking, decoding, bad URL) | `.other(error)` | `nil` |
+
+Two things to keep in mind:
+
+- Server message codes and HTTP status codes share the same ``W3WError/code-swift.property`` space, so a check like `error.code == 401` may match either. Pair it with the message when the distinction matters.
+- ``W3WError`` is `CustomStringConvertible`, and `.code` renders as `"702: Session expired"` — code prefix included. Show the associated message itself when the UI needs clean user-facing text.
 
 Good to know:
 
