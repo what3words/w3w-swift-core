@@ -69,9 +69,10 @@ public struct W3WAPI: Sendable {
   /// - Parameters:
   ///   - baseURL: The base URL that all request paths are appended to.
   ///   - headers: HTTP headers to send with every request. Defaults to empty.
-  public init(baseURL: URL, headers: [String: String] = [:]) {
+  public init(baseURL: URL, headers: [String: String] = [:], params: [String: String] = [:]) {
     self.baseURL = baseURL
     self.headers = headers
+    self.params = params
   }
 
   /// Performs a request and decodes the JSON response into the given type.

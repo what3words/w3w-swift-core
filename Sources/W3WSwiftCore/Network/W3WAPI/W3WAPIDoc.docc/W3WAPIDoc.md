@@ -9,7 +9,7 @@ A lightweight, `Sendable` HTTP client for what3words REST services, built on `UR
 ```swift
 var api = W3WAPI(
   baseURL: URL(string: "https://accountsapi.live.staging.w3w.io")!,
-  headers: ["auth_token": token] // auth decided by the call site
+  params: ["auth_token": token, "key": appKey] // provided by the call site
 )
 ```
 
@@ -26,7 +26,7 @@ struct SavedLocationService {
   init(appKey: String, authToken: String) {
     api = W3WAPI(
       baseURL: URL(string: "https://accountsapi.live.staging.w3w.io")!,
-      headers: ["key": appKey, "auth_token": authToken,]
+      params: ["key": appKey, "auth_token": authToken]
     )
   }
 }
