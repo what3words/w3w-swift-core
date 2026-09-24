@@ -26,10 +26,6 @@ public struct W3WApi: Sendable {
   /// The session used to perform network requests. Defaults to `URLSession.shared`.
   public var urlSession = URLSession.shared
 
-  /// The broadcaster this client sends session events on.
-  /// Defaults to ``W3WSessionEvents/shared``.
-  public var sessionEvents = W3WSessionEvents.shared
-
   /// The base URL that all request paths are appended to.
   public var baseURL: URL
 
@@ -251,12 +247,6 @@ private extension W3WApi {
     }
     guard acceptingCodes.contains(response.statusCode) else {
       if let error = try? decoder.decode(W3WError.self, from: data) {
-        // Error code 702 means the server has invalidated the current session.
-        // Broadcast on `sessionEvents` so observers can clear local session
-        // state and re-authenticate; the error is still thrown to the caller.
-        if error.code == 702 {
-          sessionEvents.sendExpiration()
-        }
         throw error
       }
       throw W3WError.code(

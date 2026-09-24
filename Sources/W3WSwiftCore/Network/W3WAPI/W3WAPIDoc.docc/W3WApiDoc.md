@@ -165,32 +165,18 @@ Two things to keep in mind:
 
 Good to know:
 
-- **Session expiry (code 702):** handled specially — see <doc:W3WApiDoc#Session-expiry-code-702> below.
 - **Accepted status codes:** ``W3WApi/acceptingCodes`` defaults to `200..<300`; widen it if an endpoint legitimately returns something else.
 - **Caching:** ``W3WApi/cachePolicy`` defaults to `.useProtocolCachePolicy` (honours server cache headers); set `.reloadIgnoringLocalCacheData` on a client that must always fetch fresh data.
 
 ## Session expiry (code 702)
 
-Message code 702 means the server has invalidated the session: every subsequent request with that token will fail until the user re-authenticates. It is the one error `W3WApi` does more than throw — it also broadcasts on ``W3WSessionEvents/onExpiration`` (on the main queue) before the throw, so state that lives far from the call site can be cleared in one place.
-
-Catching and observing are complementary, not exclusive: the error is *always* thrown, whether or not anyone observes the event. Pick where each concern lives — three options, and a call site may well use more than one.
-
-| Approach | Reach | Use it for |
-|---|---|---|
-| Catch at the call site | Only the call that failed | One screen reacting to its own request |
-| ``W3WSessionEvents/shared`` | Every `W3WApi` in the process | App-wide sign-out — **recommended for the main app** |
-| Injected ``W3WSessionEvents`` | Only clients you gave it to | A feature module that resolves expiry itself, and tests |
-
-### Catching it at the call site
-
-Nothing to subscribe to — 702 arrives as an ordinary ``W3WError/code(_:_:)``:
+Message code 702 means the server has invalidated the session: every subsequent request with that token will fail until the user re-authenticates. `W3WApi` gives it no special treatment — it arrives as an ordinary ``W3WError/code(_:_:)`` like any other server error:
 
 ```swift
 do throws(W3WError) {
   let lists = try await api.lists()
 } catch {
   if error.code == 702 {
-    // Handle it here and now: this screen's own retry / sign-in prompt.
     await reauthenticateAndRetry()
   } else {
     showAlert(String(describing: error))
@@ -198,54 +184,4 @@ do throws(W3WError) {
 }
 ```
 
-Use this when the response belongs to one screen or flow. It does not scale to an app-wide sign-out: every call site would have to repeat the check, and whichever request loses the race would clear session state twice.
-
-### Observing W3WSessionEvents.shared — recommended for the main app
-
-Subscribe once, typically where session state is owned, and every `W3WApi` in the process feeds into it — no matter which service made the request:
-
-```swift
-final class W3WAppServices {
-  private var sessionEvents = W3WSessionEvents.shared
-
-  init() {
-    subscribe(to: sessionEvents.onExpiration) { [weak self] in
-      self?.clearCachedSession() // keychain, tokens, user defaults
-      self?.routeToSignIn()
-    }
-  }
-}
-```
-
-Worth knowing about the delivery:
-
-- Events land on the **main queue**, so UI work needs no extra hop.
-- ``W3WSessionEvents/onExpiration`` is an event, not a value — nothing is replayed to late subscribers. Subscribe during setup, before the first request.
-- Delivery is asynchronous, so a `catch` block at the call site normally runs first. Don't split one decision across both places; let the call site show its own error, and the observer own the sign-out.
-- Only ``W3WApi`` can broadcast — app code can subscribe but never send, so an expiry event always means a real 702.
-- Concurrent requests each broadcast, so two in-flight calls hitting 702 produce two events. Make the handler idempotent, or gate it on "am I already signing out?".
-
-### Injecting an instance to keep expiry internal
-
-``W3WApi/sessionEvents`` defaults to ``W3WSessionEvents/shared``, but points anywhere you like. Give a client its own instance and its 702s stop reaching the shared broadcaster:
-
-```swift
-final class SavedLocationService {
-  private var api: W3WApi
-  // This module's own broadcaster — never leaks to W3WSessionEvents.shared.
-  private let sessionEvents = W3WSessionEvents()
-
-  init(appKey: String, authToken: String) {
-    api = W3WApi(baseURL: baseURL, params: ["key": appKey, "auth_token": authToken])
-    api.sessionEvents = sessionEvents   // assign before copying `api` around
-
-    subscribe(to: sessionEvents.onExpiration) { [weak self] in
-      self?.refreshTokenAndResume()
-    }
-  }
-}
-```
-
-Reach for this when a framework or feature module can resolve expiry on its own (it holds the refresh token, or runs on a service account) and should not trigger the host app's sign-out. The same trick isolates tests: give the client under test a fresh ``W3WSessionEvents`` so assertions can't be disturbed by anything else in the process.
-
-> Important: `W3WApi` is a value type, so `sessionEvents` is captured by each copy. Assign it before handing copies to other code — a copy made earlier keeps whatever broadcaster it was created with.
+Catching it at the call site suits a screen that resolves expiry on its own. It does not scale to an app-wide sign-out: every call site would have to repeat the check, and concurrent requests would each hit 702 and clear session state more than once. When several screens share one session, route expiry through whatever owns that session — a single place that decides to sign out — and make that handler idempotent.
