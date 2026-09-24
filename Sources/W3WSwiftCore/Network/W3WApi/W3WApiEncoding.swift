@@ -1,5 +1,5 @@
 //
-//  W3WAPIEncoding.swift
+//  W3WApiEncoding.swift
 //  w3w-swift-core
 //
 //  Created by Hoang Ta on 28/8/26.
@@ -8,7 +8,7 @@
 import Foundation
 
 /// The encoding used to serialise a request body.
-public enum W3WAPIEncoding: Sendable {
+public enum W3WApiEncoding: Sendable {
   /// Serialise the body as JSON with a `Content-Type: application/json` header.
   case json
   
@@ -19,11 +19,11 @@ public enum W3WAPIEncoding: Sendable {
   /// Serialise the body as `multipart/form-data`. Each file becomes its own
   /// part, and each entry of the request body becomes a text field, with its
   /// value converted to a string using string interpolation.
-  case multipart(files: [W3WAPIFilePart])
+  case multipart(files: [W3WApiFilePart])
 }
 
 /// A file to upload as one part of a `multipart/form-data` request body.
-public struct W3WAPIFilePart: Sendable {
+public struct W3WApiFilePart: Sendable {
   /// The form field name of the part, e.g. `"files"`.
   public let name: String
   

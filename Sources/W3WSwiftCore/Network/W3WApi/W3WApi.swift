@@ -1,5 +1,5 @@
 //
-//  W3WAPI.swift
+//  W3WApi.swift
 //  w3w-swift-core
 //
 //  Created by Hoang Ta on 27/8/26.
@@ -9,7 +9,7 @@ import Foundation
 
 /// A lightweight HTTP client for making REST API calls to what3words services.
 ///
-/// `W3WAPI` wraps `URLSession` and provides typed, async request methods that
+/// `W3WApi` wraps `URLSession` and provides typed, async request methods that
 /// decode JSON responses into `Decodable` types. All requests are made relative
 /// to ``baseURL``, and every request automatically includes the shared
 /// ``headers`` and ``params`` configured on the instance.
@@ -18,13 +18,17 @@ import Foundation
 /// handle a single error type:
 ///
 /// ```swift
-/// var api = W3WAPI(baseURL: url, headers: ["X-Api-Key": key])
+/// var api = W3WApi(baseURL: url, headers: ["X-Api-Key": key])
 /// let square = try await api.request(path: "/convert-to-3wa", for: W3WSquare.self)
 /// ```
 @available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
-public struct W3WAPI: Sendable {
+public struct W3WApi: Sendable {
   /// The session used to perform network requests. Defaults to `URLSession.shared`.
   public var urlSession = URLSession.shared
+
+  /// The broadcaster this client sends session events on.
+  /// Defaults to ``W3WSessionEvents/shared``.
+  public var sessionEvents = W3WSessionEvents.shared
 
   /// The base URL that all request paths are appended to.
   public var baseURL: URL
@@ -67,7 +71,7 @@ public struct W3WAPI: Sendable {
   ///   - path: The path appended to ``baseURL``.
   ///   - params: Query parameters for this request, merged over the shared ``params``.
   ///   - body: The request body, serialised according to `encoding`. Ignored for GET requests.
-  ///   - encoding: How the body is encoded. Defaults to ``W3WAPIEncoding/json``.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
   ///   - type: The `Decodable` type to decode the response into.
   /// - Returns: The decoded response value.
   /// - Throws: A ``W3WError`` describing the server error, or wrapping
@@ -77,7 +81,7 @@ public struct W3WAPI: Sendable {
     path: String,
     params: [String: String]? = nil,
     body: [String: Any]? = nil,
-    encoding: W3WAPIEncoding = .json,
+    encoding: W3WApiEncoding = .json,
     for type: T.Type
   ) async throws(W3WError) -> T {
     do {
@@ -102,7 +106,7 @@ public struct W3WAPI: Sendable {
   ///   - path: The path appended to ``baseURL``.
   ///   - params: Query parameters for this request, merged over the shared ``params``.
   ///   - body: The request body, serialised according to `encoding`. Ignored for GET requests.
-  ///   - encoding: How the body is encoded. Defaults to ``W3WAPIEncoding/json``.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
   /// - Throws: A ``W3WError`` describing the server error, or wrapping
   ///   any underlying networking failure.
   public func request(
@@ -110,7 +114,7 @@ public struct W3WAPI: Sendable {
     path: String,
     params: [String: String]? = nil,
     body: [String: Any]? = nil,
-    encoding: W3WAPIEncoding = .json
+    encoding: W3WApiEncoding = .json
   ) async throws(W3WError) {
     do {
       let request: URLRequest = try request(method, path: path, params: params ?? [:], body: body, encoding: encoding)
@@ -126,7 +130,7 @@ public struct W3WAPI: Sendable {
 
 // MARK: Convenient methods
 @available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
-extension W3WAPI {
+extension W3WApi {
   /// Performs a GET request and decodes the JSON response into the given type.
   ///
   /// Shorthand for ``request(_:path:params:body:encoding:for:)`` with `.get`.
@@ -153,7 +157,7 @@ extension W3WAPI {
   ///   - path: The path appended to ``baseURL``.
   ///   - params: Query parameters for this request, merged over the shared ``params``.
   ///   - body: The request body, serialised according to `encoding`.
-  ///   - encoding: How the body is encoded. Defaults to ``W3WAPIEncoding/json``.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
   ///   - type: The `Decodable` type to decode the response into.
   /// - Returns: The decoded response value.
   /// - Throws: A ``W3WError`` on failure.
@@ -161,7 +165,7 @@ extension W3WAPI {
     _ path: String,
     params: [String: String]? = nil,
     body: [String: Any]? = nil,
-    encoding: W3WAPIEncoding = .json,
+    encoding: W3WApiEncoding = .json,
     for type: T.Type
   ) async throws(W3WError) -> T {
     try await request(.post, path: path, params: params, body: body, encoding: encoding, for: type)
@@ -175,13 +179,13 @@ extension W3WAPI {
   ///   - path: The path appended to ``baseURL``.
   ///   - params: Query parameters for this request, merged over the shared ``params``.
   ///   - body: The request body, serialised according to `encoding`.
-  ///   - encoding: How the body is encoded. Defaults to ``W3WAPIEncoding/json``.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
   /// - Throws: A ``W3WError`` on failure.
   public func post(
     _ path: String,
     params: [String: String]? = nil,
     body: [String: Any]? = nil,
-    encoding: W3WAPIEncoding = .json
+    encoding: W3WApiEncoding = .json
   ) async throws(W3WError) {
     try await request(.post, path: path, params: params, body: body, encoding: encoding)
   }
@@ -189,12 +193,12 @@ extension W3WAPI {
 
 // MARK: - Helpers
 @available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
-private extension W3WAPI {
+private extension W3WApi {
   /// Builds a `URLRequest` from the client configuration and per-request values.
   ///
   /// Merges the shared ``params`` with the per-request ones (per-request wins),
   /// applies ``headers``, and serialises the body for non-GET requests.
-  func request(_ method: W3WRequestMethod, path: String, params: [String: String], body: [String: Any]?, encoding: W3WAPIEncoding) throws -> URLRequest {
+  func request(_ method: W3WRequestMethod, path: String, params: [String: String], body: [String: Any]?, encoding: W3WApiEncoding) throws -> URLRequest {
     let url = baseURL.appendingPathComponent(path)
     guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
       throw W3WURLError.badURL(url)
@@ -248,12 +252,10 @@ private extension W3WAPI {
     guard acceptingCodes.contains(response.statusCode) else {
       if let error = try? decoder.decode(W3WError.self, from: data) {
         // Error code 702 means the server has invalidated the current session.
-        // Broadcast `onRequireSessionReset` so observers can clear local
-        // session state and re-authenticate; the error is still thrown to the caller.
+        // Broadcast on `sessionEvents` so observers can clear local session
+        // state and re-authenticate; the error is still thrown to the caller.
         if error.code == 702 {
-          DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .w3wOnRequireSessionReset, object: nil)
-          }
+          sessionEvents.sendExpiration()
         }
         throw error
       }
@@ -279,7 +281,7 @@ private extension W3WAPI {
   /// Each file becomes its own part, and each entry of `body` becomes a text
   /// field. Callers must ensure the result has at least one part, as required
   /// by RFC 2046.
-  func multipartBody(boundary: String, files: [W3WAPIFilePart], body: [String: Any]?) -> Data {
+  func multipartBody(boundary: String, files: [W3WApiFilePart], body: [String: Any]?) -> Data {
     var data = Data()
     for file in files {
       data.append("--\(boundary)\r\n")

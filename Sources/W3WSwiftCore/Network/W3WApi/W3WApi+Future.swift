@@ -1,5 +1,5 @@
 //
-//  W3WAPI.swift
+//  W3WApi.swift
 //  w3w-swift-core
 //
 //  Created by Hoang Ta on 27/8/26.
@@ -8,10 +8,10 @@
 import Foundation
 import Combine
 
-// Combine-based counterparts to the async request methods on `W3WAPI`,
+// Combine-based counterparts to the async request methods on `W3WApi`,
 // for callers that consume results as publishers rather than with async/await.
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-extension W3WAPI {
+extension W3WApi {
   /// Bridges an async request into a Combine `Future` that emits the decoded
   /// value once, or fails with a ``W3WError``.
   private func future<T: Decodable>(
