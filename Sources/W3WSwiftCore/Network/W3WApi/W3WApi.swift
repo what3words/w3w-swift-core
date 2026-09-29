@@ -185,6 +185,27 @@ extension W3WApi {
   ) async throws(W3WError) {
     try await request(.post, path: path, params: params, body: body, encoding: encoding)
   }
+
+  /// Performs a DELETE request where the response body is not needed.
+  ///
+  /// Shorthand for ``request(_:path:params:body:encoding:)`` with `.delete`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: An optional request body, serialised according to `encoding`.
+  ///     Most DELETE endpoints identify the resource by path or params alone,
+  ///     and some servers or proxies ignore a DELETE body.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
+  /// - Throws: A ``W3WError`` on failure.
+  public func delete(
+    _ path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil,
+    encoding: W3WApiEncoding = .json
+  ) async throws(W3WError) {
+    try await request(.delete, path: path, params: params, body: body, encoding: encoding)
+  }
 }
 
 // MARK: - Helpers

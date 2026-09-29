@@ -89,4 +89,31 @@ extension W3WApi {
       }
     }
   }
+
+  /// Performs a DELETE request where the response body is not needed,
+  /// delivering completion through a `Future`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: An optional request body, serialised according to `encoding`.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
+  /// - Returns: A future that emits once on success or fails with a ``W3WError``.
+  public func delete(
+    _ path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil,
+    encoding: W3WApiEncoding = .json
+  ) -> Future<Void, W3WError> {
+    Future { promise in
+      Task {
+        do throws(W3WError) {
+          try await request(.delete, path: path, params: params, body: body, encoding: encoding)
+          promise(.success(()))
+        } catch {
+          promise(.failure(error))
+        }
+      }
+    }
+  }
 }

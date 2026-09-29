@@ -110,8 +110,13 @@ The core entry points are `request(_:path:params:body:encoding:for:)` and its bo
 - ``W3WApi/get(_:params:for:)-swift.method`` — GET + decode.
 - ``W3WApi/post(_:params:body:encoding:for:)`` — POST + decode.
 - ``W3WApi/post(_:params:body:encoding:)`` — POST, fire-and-forget (only success/failure matters).
+- ``W3WApi/delete(_:params:body:encoding:)`` — DELETE, fire-and-forget. The resource is usually identified by the path; `body` is optional and some servers or proxies ignore it on DELETE.
 
-Fall back to `request` directly only when you need a less common HTTP method.
+```swift
+try await api.delete("/accounts/v1/lists/\(id)")
+```
+
+Fall back to `request` directly only when you need a less common HTTP method (`PUT`, `PATCH`) or a DELETE that decodes a response.
 
 ## Reactive call sites
 
@@ -120,9 +125,14 @@ If the surrounding code is Combine-based, use the `Future`-returning counterpart
 ```swift
 api.get("/accounts/v1/lists", for: W3WLists.self)   // Future<W3WLists, W3WError>
   .sink(receiveCompletion: { ... }, receiveValue: { ... })
+
+api.delete("/accounts/v1/lists/\(id)")               // Future<Void, W3WError>
+  .sink(receiveCompletion: { ... }, receiveValue: { _ in })
 ```
 
-Each future emits the decoded value once, or fails with a ``W3WError``.
+Available counterparts: `get(_:params:for:)`, `post(_:params:body:for:)`, `post(_:params:body:)` and `delete(_:params:body:encoding:)`. Each future emits the decoded value (or `Void`) once, or fails with a ``W3WError``.
+
+> Note: A `Future` starts its request as soon as it is created, not when it is subscribed to, and cancelling the subscription does not cancel the underlying request.
 
 ## Working with errors
 
