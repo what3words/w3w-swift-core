@@ -1,0 +1,119 @@
+//
+//  W3WApi.swift
+//  w3w-swift-core
+//
+//  Created by Hoang Ta on 27/8/26.
+//
+
+import Foundation
+import Combine
+
+// Combine-based counterparts to the async request methods on `W3WApi`,
+// for callers that consume results as publishers rather than with async/await.
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+extension W3WApi {
+  /// Bridges an async request into a Combine `Future` that emits the decoded
+  /// value once, or fails with a ``W3WError``.
+  private func future<T: Decodable>(
+    _ method: W3WRequestMethod,
+    path: String,
+    params: [String: String]?,
+    body: [String: Any]?,
+    for type: T.Type
+  ) -> Future<T, W3WError> {
+    Future { promise in
+      Task {
+        do throws(W3WError) {
+          let value = try await request(method, path: path, params: params, body: body, for: type)
+          promise(.success(value))
+        } catch {
+          promise(.failure(error))
+        }
+      }
+    }
+  }
+  
+  /// Performs a GET request, delivering the decoded response through a `Future`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - type: The `Decodable` type to decode the response into.
+  /// - Returns: A future that emits the decoded value or fails with a ``W3WError``.
+  public func get<T: Decodable>(
+    _ path: String,
+    params: [String: String]? = nil,
+    for type: T.Type
+  ) -> Future<T, W3WError> {
+    future(.get, path: path, params: params, body: nil, for: type)
+  }
+
+  /// Performs a POST request, delivering the decoded response through a `Future`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: The request body, serialised as JSON.
+  ///   - type: The `Decodable` type to decode the response into.
+  /// - Returns: A future that emits the decoded value or fails with a ``W3WError``.
+  public func post<T: Decodable>(
+    _ path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil,
+    for type: T.Type
+  ) -> Future<T, W3WError> {
+    future(.post, path: path, params: params, body: body, for: type)
+  }
+
+  /// Performs a POST request where the response body is not needed,
+  /// delivering completion through a `Future`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: The request body, serialised as JSON.
+  /// - Returns: A future that emits once on success or fails with a ``W3WError``.
+  public func post(
+    _ path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil
+  ) -> Future<Void, W3WError> {
+    Future { promise in
+      Task {
+        do throws(W3WError) {
+          try await request(.post, path: path, params: params, body: body)
+          promise(.success(()))
+        } catch {
+          promise(.failure(error))
+        }
+      }
+    }
+  }
+
+  /// Performs a DELETE request where the response body is not needed,
+  /// delivering completion through a `Future`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: An optional request body, serialised according to `encoding`.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
+  /// - Returns: A future that emits once on success or fails with a ``W3WError``.
+  public func delete(
+    _ path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil,
+    encoding: W3WApiEncoding = .json
+  ) -> Future<Void, W3WError> {
+    Future { promise in
+      Task {
+        do throws(W3WError) {
+          try await request(.delete, path: path, params: params, body: body, encoding: encoding)
+          promise(.success(()))
+        } catch {
+          promise(.failure(error))
+        }
+      }
+    }
+  }
+}

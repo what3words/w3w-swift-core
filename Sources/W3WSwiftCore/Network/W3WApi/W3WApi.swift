@@ -1,0 +1,337 @@
+//
+//  W3WApi.swift
+//  w3w-swift-core
+//
+//  Created by Hoang Ta on 27/8/26.
+//
+
+import Foundation
+
+/// A lightweight HTTP client for making REST API calls to what3words services.
+///
+/// `W3WApi` wraps `URLSession` and provides typed, async request methods that
+/// decode JSON responses into `Decodable` types. All requests are made relative
+/// to ``baseURL``, and every request automatically includes the shared
+/// ``headers`` and ``params`` configured on the instance.
+///
+/// Errors are normalised into ``W3WError`` so callers only need to
+/// handle a single error type:
+///
+/// ```swift
+/// var api = W3WApi(baseURL: url, headers: ["X-Api-Key": key])
+/// let square = try await api.request(path: "/convert-to-3wa", for: W3WSquare.self)
+/// ```
+@available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
+public struct W3WApi: Sendable {
+  /// The session used to perform network requests. Defaults to `URLSession.shared`.
+  public var urlSession = URLSession.shared
+
+  /// The base URL that all request paths are appended to.
+  public var baseURL: URL
+
+  /// HTTP headers sent with every request, e.g. API keys or content negotiation.
+  public var headers = [String: String]()
+
+  /// Query parameters appended to every request. Per-request parameters
+  /// with the same name take precedence over these.
+  public var params = [String: String]()
+
+  /// The range of HTTP status codes treated as success. Defaults to `200..<300`.
+  /// Responses outside this range are decoded as ``W3WError`` and thrown.
+  public var acceptingCodes = 200..<300
+
+  /// The cache policy applied to every request built by this client.
+  /// Defaults to `.useProtocolCachePolicy`, which honours the server's
+  /// cache headers. Set to `.reloadIgnoringLocalCacheData` to always
+  /// fetch fresh data.
+  public var cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy
+  
+  /// The decoder used for response bodies. Converts snake_case keys to camelCase.
+  public let decoder = JSONDecoder.default
+
+  /// Creates an API client rooted at the given base URL.
+  ///
+  /// - Parameters:
+  ///   - baseURL: The base URL that all request paths are appended to.
+  ///   - headers: HTTP headers to send with every request. Defaults to empty.
+  public init(baseURL: URL, headers: [String: String] = [:], params: [String: String] = [:]) {
+    self.baseURL = baseURL
+    self.headers = headers
+    self.params = params
+  }
+
+  /// Performs a request and decodes the JSON response into the given type.
+  ///
+  /// - Parameters:
+  ///   - method: The HTTP method to use. Defaults to `.get`.
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: The request body, serialised according to `encoding`. Ignored for GET requests.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
+  ///   - type: The `Decodable` type to decode the response into.
+  /// - Returns: The decoded response value.
+  /// - Throws: A ``W3WError`` describing the server error, or wrapping
+  ///   any underlying networking or decoding failure.
+  public func request<T: Decodable>(
+    _ method: W3WRequestMethod = .get,
+    path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil,
+    encoding: W3WApiEncoding = .json,
+    for type: T.Type
+  ) async throws(W3WError) -> T {
+    do {
+      let request: URLRequest = try request(method, path: path, params: params ?? [:], body: body, encoding: encoding)
+      let data = try await data(for: request)
+      return try decoder.decode(T.self, from: data)
+    } catch {
+      switch error {
+      case let apiError as W3WError: throw apiError
+      default: throw .other(error)
+      }
+    }
+  }
+  
+  /// Performs a request where the response body is not needed.
+  ///
+  /// Use this for fire-and-forget style calls such as submissions or deletions
+  /// where only success or failure matters.
+  ///
+  /// - Parameters:
+  ///   - method: The HTTP method to use. Defaults to `.post`.
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: The request body, serialised according to `encoding`. Ignored for GET requests.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
+  /// - Throws: A ``W3WError`` describing the server error, or wrapping
+  ///   any underlying networking failure.
+  public func request(
+    _ method: W3WRequestMethod = .post,
+    path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil,
+    encoding: W3WApiEncoding = .json
+  ) async throws(W3WError) {
+    do {
+      let request: URLRequest = try request(method, path: path, params: params ?? [:], body: body, encoding: encoding)
+      try await data(for: request)
+    } catch {
+      switch error {
+      case let apiError as W3WError: throw apiError
+      default: throw .other(error)
+      }
+    }
+  }
+}
+
+// MARK: Convenient methods
+@available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
+extension W3WApi {
+  /// Performs a GET request and decodes the JSON response into the given type.
+  ///
+  /// Shorthand for ``request(_:path:params:body:encoding:for:)`` with `.get`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - type: The `Decodable` type to decode the response into.
+  /// - Returns: The decoded response value.
+  /// - Throws: A ``W3WError`` on failure.
+  public func get<T: Decodable>(
+    _ path: String,
+    params: [String: String]? = nil,
+    for type: T.Type
+  ) async throws(W3WError) -> T {
+    try await request(.get, path: path, params: params, for: type)
+  }
+
+  /// Performs a POST request and decodes the JSON response into the given type.
+  ///
+  /// Shorthand for ``request(_:path:params:body:encoding:for:)`` with `.post`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: The request body, serialised according to `encoding`.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
+  ///   - type: The `Decodable` type to decode the response into.
+  /// - Returns: The decoded response value.
+  /// - Throws: A ``W3WError`` on failure.
+  public func post<T: Decodable>(
+    _ path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil,
+    encoding: W3WApiEncoding = .json,
+    for type: T.Type
+  ) async throws(W3WError) -> T {
+    try await request(.post, path: path, params: params, body: body, encoding: encoding, for: type)
+  }
+
+  /// Performs a POST request where the response body is not needed.
+  ///
+  /// Shorthand for ``request(_:path:params:body:encoding:)`` with `.post`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: The request body, serialised according to `encoding`.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
+  /// - Throws: A ``W3WError`` on failure.
+  public func post(
+    _ path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil,
+    encoding: W3WApiEncoding = .json
+  ) async throws(W3WError) {
+    try await request(.post, path: path, params: params, body: body, encoding: encoding)
+  }
+
+  /// Performs a DELETE request where the response body is not needed.
+  ///
+  /// Shorthand for ``request(_:path:params:body:encoding:)`` with `.delete`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - body: An optional request body, serialised according to `encoding`.
+  ///     Most DELETE endpoints identify the resource by path or params alone,
+  ///     and some servers or proxies ignore a DELETE body.
+  ///   - encoding: How the body is encoded. Defaults to ``W3WApiEncoding/json``.
+  /// - Throws: A ``W3WError`` on failure.
+  public func delete(
+    _ path: String,
+    params: [String: String]? = nil,
+    body: [String: Any]? = nil,
+    encoding: W3WApiEncoding = .json
+  ) async throws(W3WError) {
+    try await request(.delete, path: path, params: params, body: body, encoding: encoding)
+  }
+}
+
+// MARK: - Helpers
+@available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
+private extension W3WApi {
+  /// Builds a `URLRequest` from the client configuration and per-request values.
+  ///
+  /// Merges the shared ``params`` with the per-request ones (per-request wins),
+  /// applies ``headers``, and serialises the body for non-GET requests.
+  func request(_ method: W3WRequestMethod, path: String, params: [String: String], body: [String: Any]?, encoding: W3WApiEncoding) throws -> URLRequest {
+    let url = baseURL.appendingPathComponent(path)
+    guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+      throw W3WURLError.badURL(url)
+    }
+    
+    let queryItems = self.params.merging(params) { $1 }.map(URLQueryItem.init)
+    if !queryItems.isEmpty {
+      components.queryItems = queryItems
+    }
+    guard var request = components.url.map({ URLRequest(url: $0, cachePolicy: cachePolicy) }) else {
+      throw W3WURLError.badComponents(components)
+    }
+    request.httpMethod = method.rawValue
+    for (name, value) in headers {
+      request.setValue(value, forHTTPHeaderField: name)
+    }
+    
+    guard method != .get else { return request }
+    
+    switch (encoding, body) {
+    case (.json, .some(let body)):
+      request.httpBody = try JSONSerialization.data(withJSONObject: body)
+      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      
+    case (.form, .some(let body)):
+      request.httpBody = formBody(from: body)
+      request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+
+    // Skipped when there would be zero parts — RFC 2046 requires at least one.
+    case (.multipart(let files), let body) where !files.isEmpty || body?.isEmpty == false:
+      let boundary = "Boundary-\(UUID().uuidString)"
+      request.httpBody = multipartBody(boundary: boundary, files: files, body: body)
+      request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+      
+    default: break // No body to send
+    }
+    return request
+  }
+  
+  /// Executes the request and validates the HTTP response.
+  ///
+  /// Status codes outside ``acceptingCodes`` are turned into a ``W3WError``,
+  /// decoded from the response body when possible, otherwise built from the
+  /// status code's localised description.
+  @discardableResult
+  func data(for request: URLRequest) async throws -> Data {
+    let (data, response) = try await urlSession.data(for: request)
+    guard let response = response as? HTTPURLResponse else {
+      throw W3WURLError.badResponse(response)
+    }
+    guard acceptingCodes.contains(response.statusCode) else {
+      if let error = try? decoder.decode(W3WError.self, from: data) {
+        throw error
+      }
+      throw W3WError.code(
+        response.statusCode,
+        HTTPURLResponse.localizedString(forStatusCode: response.statusCode)
+      )
+    }
+    return data
+  }
+  
+  /// Serialises the body as percent-encoded `key=value` pairs for a
+  /// `application/x-www-form-urlencoded` request.
+  func formBody(from body: [String: Any]) -> Data? {
+    var components = URLComponents()
+    components.queryItems = body.map { URLQueryItem(name: $0.key, value: "\($0.value)") }
+    let query = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+    return query?.data(using: .utf8)
+  }
+
+  /// Serialises files and text fields into a `multipart/form-data` body.
+  ///
+  /// Each file becomes its own part, and each entry of `body` becomes a text
+  /// field. Callers must ensure the result has at least one part, as required
+  /// by RFC 2046.
+  func multipartBody(boundary: String, files: [W3WApiFilePart], body: [String: Any]?) -> Data {
+    var data = Data()
+    for file in files {
+      data.append("--\(boundary)\r\n")
+      data.append("Content-Disposition: form-data; name=\"\(file.name.multipartSafe)\"; filename=\"\(file.fileName.multipartSafe)\"\r\n")
+      data.append("Content-Type: \(file.contentType)\r\n\r\n")
+      data.append(file.data)
+      data.append("\r\n")
+    }
+    for (name, value) in body ?? [:] {
+      data.append("--\(boundary)\r\n")
+      data.append("Content-Disposition: form-data; name=\"\(name.multipartSafe)\"\r\n\r\n")
+      data.append("\(value)\r\n")
+    }
+    data.append("--\(boundary)--\r\n")
+    return data
+  }
+}
+
+private extension Data {
+  /// Appends the UTF-8 bytes of the given string.
+  mutating func append(_ string: String) {
+    append(Data(string.utf8))
+  }
+}
+
+@available(iOS 13.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
+private extension String {
+  /// Strips characters that would break a multipart `Content-Disposition` header.
+  var multipartSafe: String {
+    filter { !"\"\r\n".contains($0) }
+  }
+}
+
+private extension JSONDecoder {
+  /// A decoder configured for what3words API responses,
+  /// converting snake_case keys to camelCase.
+  static var `default`: JSONDecoder {
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    return decoder
+  }
+}
