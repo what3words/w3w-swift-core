@@ -47,7 +47,7 @@ public struct W3WApi: Sendable {
   public var cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy
   
   /// The decoder used for response bodies. Converts snake_case keys to camelCase.
-  public let decoder = JSONDecoder.default
+  public var decoder = JSONDecoder.default
 
   /// Creates an API client rooted at the given base URL.
   ///
@@ -332,6 +332,7 @@ private extension JSONDecoder {
   static var `default`: JSONDecoder {
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
+    decoder.dateDecodingStrategy = .secondsSince1970
     return decoder
   }
 }
