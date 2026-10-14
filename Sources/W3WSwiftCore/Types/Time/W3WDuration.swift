@@ -15,9 +15,10 @@ import Foundation
 
 public struct W3WDuration: Equatable {
 
-  let hourMultiplier = 60.0
-  let dayMultiplier  = 60.0 * 24.0
-  let weekMultiplier = 60.0 * 24.0 * 7.0
+  // Seconds per hour, day and week.
+  let hourMultiplier = 60.0 * 60.0
+  let dayMultiplier  = 60.0 * 60.0 * 24.0
+  let weekMultiplier = 60.0 * 60.0 * 24.0 * 7.0
   
   public var hours: Double {
     get { seconds / hourMultiplier }
