@@ -13,10 +13,11 @@ public enum W3WNetworkConnnection {
   case unreachable
   case wiredEthernet
   case loopback
+  case other
   case unknown
   
   public func isOnline() -> Bool {
-    return (self == .wifi) || (self == .cellular) || (self == .wiredEthernet)
+    return (self == .wifi) || (self == .cellular) || (self == .wiredEthernet) || (self == .other)
   }
 }
 
