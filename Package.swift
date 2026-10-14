@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "w3w-swift-core",
 
-    platforms: [.macOS(.v10_15), .iOS(.v12), .tvOS(.v12), .watchOS(.v4)],
+    platforms: [.macOS(.v13), .iOS(.v12), .tvOS(.v12), .watchOS(.v9)],
 
     products: [.library(name: "W3WSwiftCore",   targets: ["W3WSwiftCore"])],
 
