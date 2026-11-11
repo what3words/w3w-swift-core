@@ -48,6 +48,35 @@ extension W3WApi {
     future(.get, path: path, params: params, body: nil, for: type)
   }
 
+  /// Performs a GET request, delivering the decoded response through a `Future`,
+  /// or `nil` when the server responds with one of `noContentCodes`.
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - type: The `Decodable` type to decode the response into.
+  ///   - noContentCodes: Status codes that mean success without a body.
+  ///     They must also fall within ``acceptingCodes``, otherwise they are thrown as errors.
+  /// - Returns: A future that emits the decoded value, `nil` for a no-content response,
+  ///   or fails with a ``W3WError``.
+  public func get<T: Decodable>(
+    _ path: String,
+    params: [String: String]? = nil,
+    for type: T.Type,
+    noContentCodes: Set<Int>
+  ) -> Future<T?, W3WError> {
+    Future { promise in
+      Task {
+        do throws(W3WError) {
+          let value: T? = try await get(path, params: params, for: type, noContentCodes: noContentCodes)
+          promise(.success(value))
+        } catch {
+          promise(.failure(error))
+        }
+      }
+    }
+  }
+
   /// Performs a POST request, delivering the decoded response through a `Future`.
   ///
   /// - Parameters:
