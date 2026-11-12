@@ -145,6 +145,45 @@ extension W3WApi {
     try await request(.get, path: path, params: params, for: type)
   }
 
+  /// Performs a GET request and decodes the JSON response into the given type,
+  /// returning `nil` when the server responds with one of `noContentCodes`.
+  ///
+  /// Use this for endpoints that may succeed without a body, e.g. `204 No Content`
+  /// when the client already has the latest data:
+  ///
+  /// ```swift
+  /// if let lists = try await api.get("/lists", for: [W3WList].self, noContentCodes: [204]) {
+  ///   update(lists)
+  /// }
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - path: The path appended to ``baseURL``.
+  ///   - params: Query parameters for this request, merged over the shared ``params``.
+  ///   - type: The `Decodable` type to decode the response into.
+  ///   - noContentCodes: Status codes that mean success without a body.
+  ///     They must also fall within ``acceptingCodes``, otherwise they are thrown as errors.
+  /// - Returns: The decoded response value, or `nil` for a no-content response.
+  /// - Throws: A ``W3WError`` on failure.
+  public func get<T: Decodable>(
+    _ path: String,
+    params: [String: String]? = nil,
+    for type: T.Type,
+    noContentCodes: Set<Int>
+  ) async throws(W3WError) -> T? {
+    do {
+      let request: URLRequest = try request(.get, path: path, params: params ?? [:], body: nil, encoding: .json)
+      let (data, statusCode) = try await response(for: request)
+      guard !noContentCodes.contains(statusCode) else { return nil }
+      return try decoder.decode(T.self, from: data)
+    } catch {
+      switch error {
+      case let apiError as W3WError: throw apiError
+      default: throw .other(error)
+      }
+    }
+  }
+
   /// Performs a POST request and decodes the JSON response into the given type.
   ///
   /// Shorthand for ``request(_:path:params:body:encoding:for:)`` with `.post`.
@@ -262,6 +301,12 @@ private extension W3WApi {
   /// status code's localised description.
   @discardableResult
   func data(for request: URLRequest) async throws -> Data {
+    try await response(for: request).data
+  }
+
+  /// Same as ``data(for:)``, but also returns the status code so callers
+  /// can tell apart responses within ``acceptingCodes``.
+  func response(for request: URLRequest) async throws -> (data: Data, statusCode: Int) {
     let (data, response) = try await urlSession.data(for: request)
     guard let response = response as? HTTPURLResponse else {
       throw W3WURLError.badResponse(response)
@@ -275,7 +320,7 @@ private extension W3WApi {
         HTTPURLResponse.localizedString(forStatusCode: response.statusCode)
       )
     }
-    return data
+    return (data, response.statusCode)
   }
   
   /// Serialises the body as percent-encoded `key=value` pairs for a
